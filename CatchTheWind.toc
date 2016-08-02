@@ -1,0 +1,8 @@
+## Interface: 40300
+## Title: CatchTheWind
+## Author: Lanrutcon
+## Notes: Cinematic Quest Interactions
+## Version: 1.0
+## DefaultState: enabled
+
+CatchTheWind.lua
