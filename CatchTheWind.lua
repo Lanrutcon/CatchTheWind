@@ -192,7 +192,7 @@ local function createQuestRewardPanel()
 	--refactor > extract code
 	
 	for i=1, 10 do
-		local btn = CreateFrame("BUTTON", "CTWrewardPanelItem"..i, letterBox.rewardPanel, "QuestInfoRewardItemTemplate");
+		local btn = CreateFrame("BUTTON", "CTWrewardPanelItem"..i, letterBox.rewardPanel, "LargeItemButtonTemplate, QuestInfoRewardItemCodeTemplate");
 		btn:SetSize(48,48);
 		
 		btn.type = "choice";
@@ -401,7 +401,8 @@ local function onQuestComplete()
 		for i=1, GetNumQuestChoices() do
 			btn = _G["CTWrewardPanelItem"..i];
 			
-			SetItemButtonTexture(btn, _G["QuestInfoItem"..i.."IconTexture"]:GetTexture());
+			local name, texture, numItems, quality, isUsable = GetQuestItemInfo(btn.type, i);
+			SetItemButtonTexture(btn, texture);
 			_G[btn:GetName().."IconTexture"]:SetVertexColor(0.5,0.5,0.5,1);
 
 			btn:SetID(i);
