@@ -2,7 +2,8 @@
 ## Title: CatchTheWind
 ## Author: Lanrutcon
 ## Notes: Cinematic Quest Interactions
-## Version: 1.0
+## Version: 1.0.1
 ## DefaultState: enabled
+## SavedVariables: CatchTheWindSV
 
 CatchTheWind.lua

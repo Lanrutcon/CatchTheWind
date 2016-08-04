@@ -1,35 +1,42 @@
 local Addon = CreateFrame("FRAME");
 
-
 local letterBox;
+local factorTextSpeed = 1;
 
 --TODO
 --CatchTheWind
 --
 -- Cinematic Quests AddOn
--- 
---x * Zoom in when interacting with an NPC
---x * Zoom out on GOSSIP_CLOSE
---x * Hide UIParent, show cinematic view (aka letterbox) and set subtitles
---x * When choosing QuestRewards, show all options and an "ACCEPT" option
---x * Only show cinematic scenes (aka letterbox) whenever the player chooses a quest
---x * Show Accept/Decline buttons 
---x * Animate Text. Gradient like Storyline
 --x * GetTitleText + GetProgressText + GetObjectiveText + GetRewardText
 -- * Set a close-plan to player when deciding "ACCEPT/DECLINE" and choosing rewards.
--- 
+--x * Show rewards only after the last line. ("QUEST_COMPLETE")
+--x * Add SlashCommand to modify text speed
+--x * Mouse-Click shows all the message (if it's still animating). Another click passes to the next line.
+-- * SpaceBar shows all the message. This may bring problems because we have to enable keyboard.
+--
 -- QUEST PROGRESS > QUEST COMPLETE > QUEST FINISHED (it means you stop interacting with a NPC about a quest) > QUEST LOG UPDATED
 
 -- BUGS:
---x * When interacting with merchants: GOSSIP SHOW > CLOSE > MERCHANT SHOW
---x * When the line is too big, it gets out of the screen
---x * UIParent cannot be hidden when zooming in (after choosing a quest = QUEST_DETAIL)
+--x * When interacting with merchants: GOSSIP SHOW > CLOSE > MERCHANT SHOW (CHECK IN WoD)
+--x * WoD: When the NPC Questgiver only has 1 quest, it automatically goes to "QUEST_DETAIL"/"QUEST_PROGRESS". It doesn't pass through "GOSSIP" events.
 
 --x = Done/Fixed
 
 --------------------
 --UTILS
 --------------------
+
+--Used in SlashCommands
+local function printMessage(msg)
+	if(string.find(msg, "CatchTheWind")) then
+		local msg = string.sub(msg, string.find(msg, "CatchTheWind")+12, -1);
+		print("|cff777777Ca|cffaaaaaatc|cffcccccchTh|cffccccccW|cffaaaaaain|cff777777d|cffffff66"..msg);
+	else
+		print("|cffffff66"..msg);
+	end
+end
+
+
 
 local timer = CreateFrame("FRAME");
 
@@ -98,20 +105,42 @@ end
 
 
 --fontString animator
-local animateFrame = CreateFrame("FRAME");
+local animateFrame, isAnimating = CreateFrame("FRAME");
 local function animateText(fontString)
 	local total, numChars = 0, 0;
 	fontString:SetAlphaGradient(0,20);
+	isAnimating = true;
 	animateFrame:SetScript("OnUpdate", function(self, elapsed)
-		numChars = numChars + 0.25;
+		numChars = numChars + 0.25*factorTextSpeed;
 		fontString:SetAlphaGradient(numChars,20);
-		if(numChars == string.len(fontString:GetText())) then
+		if(numChars >= string.len(fontString:GetText())) then
+			isAnimating = false;
 			self:SetScript("OnUpdate", nil);
 		end
 	end);
 end
 
+--returns true if the text is still animating (i.e. fading in)
+local function isTextAnimating()
+	return isAnimating;
+end
 
+
+local blizz_SetView = SetView;
+--SetView modified for addOn needs
+--It will check first, if view that we are setting is the same that we already have.
+--This avoid the problem of calling the same view, which instantly sets the view (no smooth movement)
+local currentView = -1;
+local function SetView(view)
+	if not (view == currentView) then
+		currentView = view;
+		blizz_SetView(view);
+	end
+end
+
+
+-------------------------------
+--/UTILS
 -------------------------------
 
 
@@ -122,6 +151,7 @@ local frameFader = CreateFrame("FRAME");
 local function hideLetterBox()
 	--UIFrameFadeIn(UIParent, 0.25, 0, 1);	It's not advised to use UIFrameFade on "UIParent" because it taints the code
 	local alpha = UIParent:GetAlpha();
+	MinimapCluster:Show();
 	frameFader:SetScript("OnUpdate", function(self, elapsed)
 		if(alpha < 1) then
 			alpha = alpha + 0.05;
@@ -145,16 +175,8 @@ end
 
 
 local function showLetterBox()
---	local alpha = UIParent:GetAlpha();
---	frameFader:SetScript("OnUpdate", function(self, elapsed)
---		if(alpha > 0) then
---			alpha = alpha - 0.05;
---			UIParent:SetAlpha(alpha);
---		else
---			frameFader:SetScript("OnUpdate", nil);
---		end
---	end);
 	UIParent:SetAlpha(0);
+	MinimapCluster:Hide(); --Minimap icons aren't affected with "SetAlpha"
 	UIFrameFadeIn(letterBox, 0.25, 0, 1);
 end
 
@@ -207,7 +229,7 @@ local function createQuestRewardPanel()
 		_G[btn:GetName().."IconTexture"]:SetPoint("CENTER", btn, 0, 0);
 		
 		btn:SetBackdrop(
-			{bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+			{--bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
 			edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
 			tile = true, tileSize = 22, edgeSize = 22,
 			insets = { left = 6, right = 6, top = 6, bottom = 6 }}
@@ -299,7 +321,7 @@ local function setUpLetterBox()
 	letterBox:Hide();
 	
 	letterBox:SetScript("OnMouseUp", function(self, button)
-		if(self.textIndex == #self.text) then
+		if(not isTextAnimating() and self.textIndex == #self.text) then
 			if(self.acceptButton.fontString:GetText() == "Continue") then
 				if(IsQuestCompletable()) then
 					self.acceptButton:Show();
@@ -313,9 +335,20 @@ local function setUpLetterBox()
 			self.declineButton:Show();
 			return;
 		end
-		self.textIndex = self.textIndex + 1;
-		self.questText:SetText(self.text[self.textIndex]);
-		animateText(self.questText);
+		--checks if the text is fading in, if yes, shows the rest.
+		if(isTextAnimating()) then
+			self.questText:SetAlphaGradient(string.len(self.questText:GetText()),1);
+			isAnimating = false;
+			animateFrame:SetScript("OnUpdate", nil);
+		else
+			self.textIndex = self.textIndex + 1;
+			self.questText:SetText(self.text[self.textIndex]);
+			animateText(self.questText);
+		end
+		--fades in Quest Reward Panel if it's the last line that is being displayed
+		if(self.acceptButton.fontString:GetText() == "Thank you" and self.textIndex == #self.text) then
+			UIFrameFadeIn(self.rewardPanel, 0.5, 0, 1);
+		end
 	end);
 	
 	
@@ -325,12 +358,31 @@ local function setUpLetterBox()
 	
 end
 
+
+
+
+local function loadSavedVariables()
+	if(not CatchTheWindSV) then
+		CatchTheWindSV = {};
+		CatchTheWindSV[UnitName("player")] = {};
+		CatchTheWindSV[UnitName("player")]["FactorTextSpeed"] = 1;
+	elseif(CatchTheWindSV[UnitName("player")]) then
+		factorTextSpeed = CatchTheWindSV[UnitName("player")]["FactorTextSpeed"];
+	else
+		CatchTheWindSV[UnitName("player")] = {};
+		CatchTheWindSV[UnitName("player")]["FactorTextSpeed"] = 1;
+	end
+end
+
+
+
 ------------
 --ADDON SCRIPTS
 
 local function onPlayerLogin()
 	SaveView(5);
 	setUpLetterBox();
+	loadSavedVariables();
 end
 
 local function onGossipShow()
@@ -341,6 +393,7 @@ end
 
 local function onQuestDetail()
 	cancelTimer();
+	SetView(2);
 	letterBox.text = GetQuestText();
 	
 	letterBox.acceptButton.fontString:SetText("Accept");
@@ -358,6 +411,7 @@ end
 
 local function onQuestProgress()
 	cancelTimer();
+	SetView(2);
 	letterBox.text = GetProgressText();
 	
 	letterBox.acceptButton.fontString:SetText("Continue");
@@ -418,7 +472,7 @@ local function onQuestComplete()
 		letterBox.rewardPanel:SetSize(200, (GetNumQuestChoices())*56);
 		letterBox.rewardPanel:SetPoint("LEFT", 0, 18);
 		
-		letterBox.rewardPanel:Show();
+		--letterBox.rewardPanel:Show();
 	else
 		letterBox.rewardPanel:Hide();
 	end
@@ -436,6 +490,27 @@ Addon.scripts = {
 };
 
 
+
+--SlashCommands
+--/ctw textSpeed
+
+SLASH_CatchTheWind1, SLASH_CatchTheWind2 = "/catchthewind", "/ctw";
+
+local function SlashCmd(cmd)
+    if (cmd:match"textSpeed") then
+        local factor = tonumber(strtrim(cmd:sub(cmd:find("textSpeed")+9, -1)));
+		factorTextSpeed = factor;
+		CatchTheWindSV[UnitName("player")]["FactorTextSpeed"] = factor;
+		printMessage("CatchTheWind: The text speed is now "..factor.."x faster than the default speed.");
+    else
+    	printMessage("CatchTheWind Commands:");
+    	printMessage("      /ctw textSpeed x -> where x is the factor.");
+    end
+end
+
+SlashCmdList["CatchTheWind"] = SlashCmd;
+
+
 local moving = false;
 Addon:SetScript("OnEvent", function(self, event)
 	if(Addon.scripts[event]) then
@@ -450,6 +525,7 @@ Addon:SetScript("OnEvent", function(self, event)
 			createTimer(0.5, function() moving = false end);
 		end);
 	elseif(event == "MERCHANT_SHOW" or event == "TRAINER_SHOW" or event == "TAXIMAP_OPENED") then
+		SetView(2);
 		cancelTimer();
 	end
 end);
