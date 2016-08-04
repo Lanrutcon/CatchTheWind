@@ -1,8 +1,8 @@
-## Interface: 60200
+## Interface: 70000
 ## Title: CatchTheWind
 ## Author: Lanrutcon
 ## Notes: Cinematic Quest Interactions
-## Version: 1.0.1
+## Version: 1.0.4
 ## DefaultState: enabled
 ## SavedVariables: CatchTheWindSV
 

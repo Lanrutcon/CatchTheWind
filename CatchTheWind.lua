@@ -279,26 +279,27 @@ end
 
 
 local function setUpLetterBox()
+	local screenWidth = GetScreenWidth()*UIParent:GetEffectiveScale();
+	local screenHeight = GetScreenHeight()*UIParent:GetEffectiveScale();
 	letterBox = CreateFrame("FRAME", "CatchTheWind", WorldFrame);
-	letterBox:SetSize(GetScreenWidth(), GetScreenHeight())
 	letterBox:SetAllPoints();
 	
 	letterBox:SetFrameStrata("HIGH");
 	letterBox:SetFrameLevel(10);
 	
 	letterBox.bottomPanel = letterBox:CreateTexture();
-	letterBox.bottomPanel:SetColorTexture(0,0,0);
-	letterBox.bottomPanel:SetSize(GetScreenWidth(), GetScreenHeight()/7);
+	letterBox.bottomPanel:SetTexture(0,0,0);
+	letterBox.bottomPanel:SetSize(screenWidth, screenHeight/7);
 	letterBox.bottomPanel:SetPoint("BOTTOM");
 	
 	letterBox.topPanel = letterBox:CreateTexture();
-	letterBox.topPanel:SetColorTexture(0,0,0);
-	letterBox.topPanel:SetSize(GetScreenWidth(), GetScreenHeight()/7);
+	letterBox.topPanel:SetTexture(0,0,0);
+	letterBox.topPanel:SetSize(screenWidth, screenHeight/7);
 	letterBox.topPanel:SetPoint("TOP");
 	
 	
 	letterBox.questText = letterBox:CreateFontString(nil, "OVERLAY");
-	letterBox.questText:SetSize(GetScreenWidth()*0.75, GetScreenHeight()/7)
+	letterBox.questText:SetSize(screenWidth*0.75, screenHeight/7)
 	letterBox.questText:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE"); --WoW Font
 	letterBox.questText:SetTextColor(0.9, 0.9, 0.9, 1);
 	letterBox.questText:SetPoint("BOTTOM", 0, 0);
@@ -307,12 +308,12 @@ local function setUpLetterBox()
 	createQuestRewardPanel();
 	
 	
-	letterBox.acceptButton = createButton("CTWacceptButton", letterBox, "Accept", "BOTTOMRIGHT", 0, GetScreenHeight()/28, function(self, button)
+	letterBox.acceptButton = createButton("CTWacceptButton", letterBox, "Accept", "BOTTOMRIGHT", 0, screenHeight/28, function(self, button)
 		QuestDetailAcceptButton_OnClick();
 		hideLetterBox();
 	end);
 
-	letterBox.declineButton = createButton("CTWdeclineButton", letterBox, "Decline", "BOTTOMLEFT", 0, GetScreenHeight()/28, function(self, button)
+	letterBox.declineButton = createButton("CTWdeclineButton", letterBox, "Decline", "BOTTOMLEFT", 0, screenHeight/28, function(self, button)
 		QuestDetailDeclineButton_OnClick();
 		hideLetterBox();
 	end);
@@ -547,4 +548,3 @@ Addon:RegisterEvent("QUEST_COMPLETE");
 Addon:RegisterEvent("QUEST_FINISHED");
 
 Addon:RegisterEvent("PLAYER_LOGIN");
-
