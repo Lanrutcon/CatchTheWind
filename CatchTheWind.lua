@@ -288,12 +288,12 @@ local function setUpLetterBox()
 	letterBox:SetFrameLevel(10);
 	
 	letterBox.bottomPanel = letterBox:CreateTexture();
-	letterBox.bottomPanel:SetTexture(0,0,0);
+	letterBox.bottomPanel:SetColorTexture(0,0,0);
 	letterBox.bottomPanel:SetSize(screenWidth, screenHeight/7);
 	letterBox.bottomPanel:SetPoint("BOTTOM");
 	
 	letterBox.topPanel = letterBox:CreateTexture();
-	letterBox.topPanel:SetTexture(0,0,0);
+	letterBox.topPanel:SetColorTexture(0,0,0);
 	letterBox.topPanel:SetSize(screenWidth, screenHeight/7);
 	letterBox.topPanel:SetPoint("TOP");
 	
