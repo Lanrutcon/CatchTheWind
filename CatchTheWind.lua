@@ -13,15 +13,21 @@ local factorTextSpeed = 1;
 -- * Set a close-plan to player when deciding "ACCEPT/DECLINE" and choosing rewards. (check for libCameras)
 --x * Mouse-Click shows all the message (if it's still animating). Another click passes to the next line.
 -- * SpaceBar shows all the message. This may bring problems because we have to enable keyboard.
+-- * Try display all the rewards even if there isn't any to choose from (i.e. when there is only 1 reward) - Checkout QuestInfo.lua
 --
 -- * Start to think in moving GUI (frames and buttons) to a XML file
--- * It's about time to add documentation
+--x * It's about time to add documentation
 --
--- QUEST PROGRESS > QUEST COMPLETE > QUEST FINISHED (it means you stop interacting with a NPC about a quest) > QUEST LOG UPDATED
+--
+-- Legion: QUEST PROGRESS > QUEST COMPLETE > QUEST TURNED IN
 
 -- BUGS:
--- * Some players have problems in "Accept/Decline" buttons, i.e. they can't click on them. (Guess: Addons are in-front -> set a higher frame level)
---x * WoD: When the NPC Questgiver only has 1 quest, it automatically goes to "QUEST_DETAIL"/"QUEST_PROGRESS". It doesn't pass through "GOSSIP" events.
+--x * Some players have problems in "Accept/Decline" buttons, i.e. they can't click on them. (Guess: Addons are in-front -> set a higher frame level)
+--x * Legion: When the NPC Questgiver only has 1 quest, it automatically goes to "QUEST_DETAIL"/"QUEST_PROGRESS". It doesn't pass through "GOSSIP" events.
+--x * SaveView cancels auto-follow cam
+--x * Legion: There are quests with just one QuestReward. At the moment, NumChoicesQuests are saying those are "choices, which is not. Solution: Check if it's num choices are >1, or check if the text contains has: "Choose your reward"
+--x * Legion: Quest-Chains bugs out. Check out the screenshot in 6.2.3
+-- * Legion: Quests that pop up from mobs are messing up the addOn (need more info)
 
 --x = Done/Fixed
 
@@ -349,7 +355,7 @@ local function createQuestRewardPanel()
 		btn:SetScript("OnEnter", function(self)
 			GameTooltip:SetParent(WorldFrame);
 			GameTooltip:SetFrameStrata("TOOLTIP");
-			for i=1,3 do
+			for i=1,2 do
 				_G["ShoppingTooltip"..i]:SetParent(WorldFrame);
 				_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
 			end
@@ -364,7 +370,6 @@ local function createQuestRewardPanel()
 			GameTooltip:Hide();
 			ShoppingTooltip1:SetParent(UIParent);
 			ShoppingTooltip2:SetParent(UIParent);
-			ShoppingTooltip3:SetParent(UIParent);
 			ResetCursor();
 		end);
 		
@@ -395,7 +400,7 @@ local function setUpLetterBox()
 	letterBox = CreateFrame("FRAME", "CatchTheWind", WorldFrame);
 	letterBox:SetAllPoints();
 	
-	letterBox:SetFrameStrata("HIGH");
+	letterBox:SetFrameStrata("FULLSCREEN");
 	letterBox:SetFrameLevel(10);
 	
 	letterBox.bottomPanel = letterBox:CreateTexture();
@@ -433,7 +438,7 @@ local function setUpLetterBox()
 	letterBox:Hide();
 	
 	letterBox:SetScript("OnMouseUp", function(self, button)
-		if(not isTextAnimating() and self.textIndex == #self.text) then
+		if(not isTextAnimating() and (self.textIndex == #self.text or #self.text == 0)) then
 			if(self.acceptButton.fontString:GetText() == "Continue") then
 				if(IsQuestCompletable()) then
 					self.acceptButton:Show();
@@ -444,7 +449,7 @@ local function setUpLetterBox()
 				self.acceptButton:Show();
 			end
 			if(self.acceptButton.fontString:GetText() == "Thank you" and 
-			self.textIndex == #self.text and GetNumQuestChoices() > 0 and
+			self.textIndex == #self.text and GetNumQuestChoices() > 1 and
 			not self.rewardPanel:IsShown()) then
 				UIFrameFadeIn(self.rewardPanel, 0.5, 0, 1);
 			end
@@ -500,7 +505,7 @@ end
 --Some funcitons that will be used later for events.
 
 local function onPlayerLogin()
-	SaveView(5);
+	--SaveView(5);		SaveView completely disables the auto-follow camera
 	setUpLetterBox();
 	loadSavedVariables();
 end
@@ -557,18 +562,22 @@ local function onQuestComplete()
 	
 	letterBox.acceptButton.fontString:SetText("Thank you");
 	letterBox.acceptButton:SetScript("OnMouseUp", function(self, button)
-		if(QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 0 ) then
+		if(QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1 ) then
 			UIFrameFlash(letterBox.rewardPanel, 0.5, 0.5, 1.5, true, 0, 0);
 		else
 			QuestRewardCompleteButton_OnClick();
-			hideLetterBox();
+			--In Legion, in a chain-quest, the following quest is automatically picked, ready to be accepted (i.e. QUEST_DETAIL is triggered)
+			createTimer(0.5, function()
+				hideLetterBox();
+			end);
 		end
 	end);
 	
 	letterBox.declineButton:Hide();
 	
 	--if there is quest rewards to choose > show quest rewards
-	if(GetNumQuestChoices() > 0) then
+	--In Legion, there are quests where GetNumQuestChoices() return 1, those quests are not necessary to click.
+	if(GetNumQuestChoices() > 1) then
 		local btn;
 		
 		--show icons of quests rewards
