@@ -226,27 +226,29 @@ local frameFader = CreateFrame("FRAME");
 --
 -------------------------------------
 local function hideLetterBox()
-	--UIFrameFadeIn(UIParent, 0.25, 0, 1);	It's not advised to use UIFrameFade on "UIParent" because it taints the code
-	local alpha = UIParent:GetAlpha();
-	MinimapCluster:Show();
-	frameFader:SetScript("OnUpdate", function(self, elapsed)
-		if(alpha < 1) then
-			alpha = alpha + 0.05;
-			UIParent:SetAlpha(alpha);
-		else
-			frameFader:SetScript("OnUpdate", nil);
-		end
-	
-	end);
-	
-	UIFrameFadeOut(letterBox, 0.25, 1, 0);
-	local total = 0;
-	letterBox:SetScript("OnUpdate", function(self, elapsed)
-		total = total + elapsed;
-		if(total > 0.25) then
-			letterBox:SetScript("OnUpdate", nil);
-			letterBox:Hide();
-		end
+	createTimer(0.05, function()
+		--UIFrameFadeIn(UIParent, 0.25, 0, 1);	It's not advised to use UIFrameFade on "UIParent" because it taints the code
+		local alpha = UIParent:GetAlpha();
+		MinimapCluster:Show();
+		frameFader:SetScript("OnUpdate", function(self, elapsed)
+			if(alpha < 1) then
+				alpha = alpha + 0.05;
+				UIParent:SetAlpha(alpha);
+			else
+				frameFader:SetScript("OnUpdate", nil);
+			end
+		
+		end);
+		
+		UIFrameFadeOut(letterBox, 0.25, 1, 0);
+		local total = 0;
+		letterBox:SetScript("OnUpdate", function(self, elapsed)
+			total = total + elapsed;
+			if(total > 0.25) then
+				letterBox:SetScript("OnUpdate", nil);
+				letterBox:Hide();
+			end
+		end);
 	end);
 end
 
