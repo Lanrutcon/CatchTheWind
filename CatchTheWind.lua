@@ -16,17 +16,13 @@ local factorTextSpeed = 1;
 -- * Try display all the rewards even if there isn't any to choose from (i.e. when there is only 1 reward) - Checkout QuestInfo.lua
 --
 -- * Start to think in moving GUI (frames and buttons) to a XML file
---x * It's about time to add documentation
 --
 --
 -- Legion: QUEST PROGRESS > QUEST COMPLETE > QUEST TURNED IN
 
 -- BUGS:
---x * Some players have problems in "Accept/Decline" buttons, i.e. they can't click on them. (Guess: Addons are in-front -> set a higher frame level)
---x * Legion: When the NPC Questgiver only has 1 quest, it automatically goes to "QUEST_DETAIL"/"QUEST_PROGRESS". It doesn't pass through "GOSSIP" events.
 --x * SaveView cancels auto-follow cam
 --x * Legion: There are quests with just one QuestReward. At the moment, NumChoicesQuests are saying those are "choices, which is not. Solution: Check if it's num choices are >1, or check if the text contains has: "Choose your reward"
---x * Legion: Quest-Chains bugs out. Check out the screenshot in 6.2.3
 -- * Legion: Quests that pop up from mobs are messing up the addOn (need more info)
 
 --x = Done/Fixed
@@ -164,6 +160,7 @@ local animationFrame, isAnimating = CreateFrame("FRAME");
 -------------------------------------
 local function animateText(fontString)
 	local total, numChars = 0, 0;
+	fontString:Show();
 	fontString:SetAlphaGradient(0,20);
 	isAnimating = true;
 	animationFrame:SetScript("OnUpdate", function(self, elapsed)
@@ -226,29 +223,30 @@ local frameFader = CreateFrame("FRAME");
 --
 -------------------------------------
 local function hideLetterBox()
-	createTimer(0.05, function()
-		--UIFrameFadeIn(UIParent, 0.25, 0, 1);	It's not advised to use UIFrameFade on "UIParent" because it taints the code
-		local alpha = UIParent:GetAlpha();
-		MinimapCluster:Show();
-		frameFader:SetScript("OnUpdate", function(self, elapsed)
-			if(alpha < 1) then
-				alpha = alpha + 0.05;
-				UIParent:SetAlpha(alpha);
-			else
-				frameFader:SetScript("OnUpdate", nil);
-			end
-		
-		end);
-		
-		UIFrameFadeOut(letterBox, 0.25, 1, 0);
-		local total = 0;
-		letterBox:SetScript("OnUpdate", function(self, elapsed)
-			total = total + elapsed;
-			if(total > 0.25) then
-				letterBox:SetScript("OnUpdate", nil);
-				letterBox:Hide();
-			end
-		end);
+	if(not letterBox:IsShown()) then
+		return;
+	end
+	--UIFrameFadeIn(UIParent, 0.25, 0, 1);	It's not advised to use UIFrameFade on "UIParent" because it taints the code
+	local alpha = UIParent:GetAlpha();
+	MinimapCluster:Show();
+	frameFader:SetScript("OnUpdate", function(self, elapsed)
+		if(alpha < 1) then
+			alpha = alpha + 0.05;
+			UIParent:SetAlpha(alpha);
+		else
+			frameFader:SetScript("OnUpdate", nil);
+		end
+	
+	end);
+	
+	UIFrameFadeOut(letterBox, 0.25, 1, 0);
+	local total = 0;
+	letterBox:SetScript("OnUpdate", function(self, elapsed)
+		total = total + elapsed;
+		if(total > 0.25) then
+			letterBox:SetScript("OnUpdate", nil);
+			letterBox:Hide();
+		end
 	end);
 end
 
@@ -280,6 +278,8 @@ local function startInteraction()
 	
 	letterBox.text = splitText(letterBox.text);
 	letterBox.textIndex = 1;
+	
+	letterBox.questText:Hide();
 	letterBox.questText:SetText(letterBox.text[letterBox.textIndex]);
 	animateText(letterBox.questText);
 end
@@ -402,7 +402,7 @@ local function setUpLetterBox()
 	letterBox = CreateFrame("FRAME", "CatchTheWind", WorldFrame);
 	letterBox:SetAllPoints();
 	
-	letterBox:SetFrameStrata("FULLSCREEN");
+	letterBox:SetFrameStrata("FULLSCREEN_DIALOG");
 	letterBox:SetFrameLevel(10);
 	
 	letterBox.bottomPanel = letterBox:CreateTexture();
@@ -428,17 +428,15 @@ local function setUpLetterBox()
 	
 	letterBox.acceptButton = createButton("CTWacceptButton", letterBox, "Accept", "BOTTOMRIGHT", 0, screenHeight/28, function(self, button)
 		QuestDetailAcceptButton_OnClick();
-		hideLetterBox();
 	end);
 
 	letterBox.declineButton = createButton("CTWdeclineButton", letterBox, "Decline", "BOTTOMLEFT", 0, screenHeight/28, function(self, button)
 		QuestDetailDeclineButton_OnClick();
-		hideLetterBox();
 	end);
 	
 	
 	letterBox:Hide();
-	
+	letterBox:EnableMouse(true);
 	letterBox:SetScript("OnMouseUp", function(self, button)
 		if(not isTextAnimating() and (self.textIndex == #self.text or #self.text == 0)) then
 			if(self.acceptButton.fontString:GetText() == "Continue") then
@@ -466,6 +464,7 @@ local function setUpLetterBox()
 			animationFrame:SetScript("OnUpdate", nil);
 		else
 			self.textIndex = self.textIndex + 1;
+			letterBox.questText:Hide();
 			self.questText:SetText(self.text[self.textIndex]);
 			animateText(self.questText);
 		end
@@ -473,9 +472,12 @@ local function setUpLetterBox()
 	end);
 	
 	
+	--DECRECATED (events will now handle visibility) - Still gonna keep this if future bugs arise.
+	--[[
 	QuestFrame:HookScript("OnHide", function()
-		hideLetterBox();
+		--hideLetterBox();
 	end);
+	]]--
 	
 end
 
@@ -507,7 +509,12 @@ end
 --Some funcitons that will be used later for events.
 
 local function onPlayerLogin()
-	--SaveView(5);		SaveView completely disables the auto-follow camera
+	--SaveView(5);		--SaveView completely disables the auto-follow camera
+	--Who used the addOn until now, will have the View5 bugged.
+	--This will be fixed in the next update.
+	for i=1,5 do
+		ResetView(i);
+	end
 	setUpLetterBox();
 	loadSavedVariables();
 end
@@ -526,9 +533,11 @@ local function onQuestDetail()
 	letterBox.acceptButton.fontString:SetText("Accept");
 	letterBox.acceptButton:SetScript("OnMouseUp", function(self, button)
 		QuestDetailAcceptButton_OnClick();
-		hideLetterBox();
 	end);
 	letterBox.declineButton.fontString:SetText("Decline");
+	letterBox.declineButton:SetScript("OnMouseUp", function(self, button)
+		QuestDetailDeclineButton_OnClick();
+	end);
 	
 	showLetterBox();
 	
@@ -568,10 +577,6 @@ local function onQuestComplete()
 			UIFrameFlash(letterBox.rewardPanel, 0.5, 0.5, 1.5, true, 0, 0);
 		else
 			QuestRewardCompleteButton_OnClick();
-			--In Legion, in a chain-quest, the following quest is automatically picked, ready to be accepted (i.e. QUEST_DETAIL is triggered)
-			createTimer(0.5, function()
-				hideLetterBox();
-			end);
 		end
 	end);
 	
@@ -647,8 +652,6 @@ end
 SlashCmdList["CatchTheWind"] = SlashCmd;
 
 
---Boolean (checks if the camera is moving)
-local moving = false;
 -------------------------------------
 --
 -- Addon SetScript OnEvent
@@ -659,14 +662,14 @@ local moving = false;
 Addon:SetScript("OnEvent", function(self, event)
 	if(Addon.scripts[event]) then
 		Addon.scripts[event]();
-	elseif((event == "GOSSIP_CLOSED" or event == "MERCHANT_CLOSED" or event == "TRAINER_CLOSED" or event == "QUEST_FINISHED" or event == "TAXIMAP_CLOSED") and not moving) then
+	elseif(event == "GOSSIP_CLOSED" or event == "MERCHANT_CLOSED" or event == "TRAINER_CLOSED" or event == "QUEST_FINISHED" or event == "TAXIMAP_CLOSED") then
 		--a timer is needed because when interacting with merchants/trainers or choosing quests, "GOSSIP_CLOSED" will be
 		--triggered and right after a "MERCHANT_SHOW" will pop up and cancel this timer.
 		letterBox.rewardPanel:Hide();
+		
 		createTimer(0.05, function()
+			hideLetterBox();
 			SetView(5);
-			moving = true;
-			createTimer(0.5, function() moving = false end);
 		end);
 	elseif(event == "MERCHANT_SHOW" or event == "TRAINER_SHOW" or event == "TAXIMAP_OPENED") then
 		SetView(2);
