@@ -160,7 +160,6 @@ local animationFrame, isAnimating = CreateFrame("FRAME");
 -------------------------------------
 local function animateText(fontString)
 	local total, numChars = 0, 0;
-	fontString:Show();
 	fontString:SetAlphaGradient(0,20);
 	isAnimating = true;
 	animationFrame:SetScript("OnUpdate", function(self, elapsed)
@@ -229,6 +228,7 @@ local function hideLetterBox()
 	--UIFrameFadeIn(UIParent, 0.25, 0, 1);	It's not advised to use UIFrameFade on "UIParent" because it taints the code
 	local alpha = UIParent:GetAlpha();
 	MinimapCluster:Show();
+	WorldFrame:SetFrameStrata("BACKGROUND");
 	frameFader:SetScript("OnUpdate", function(self, elapsed)
 		if(alpha < 1) then
 			alpha = alpha + 0.05;
@@ -259,8 +259,19 @@ end
 -------------------------------------
 local function showLetterBox()
 	UIParent:SetAlpha(0);
+	WorldFrame:SetFrameStrata("FULLSCREEN_DIALOG");
 	MinimapCluster:Hide(); --Minimap icons aren't affected with "SetAlpha"
-	UIFrameFadeIn(letterBox, 0.25, 0, 1);
+	--UIFrameFadeIn(letterBox, 0.25, 0, 1);
+	--I can't use UIFrameFadeIn because it uses "Frame:Show()" which makes all childs to be shown - Problems: QuestText is displayed instantly for a second.
+	local alpha = letterBox:GetAlpha();
+	letterBox:Show();
+	letterBox:SetScript("OnUpdate", function(self, elapsed)
+		letterBox:SetAlpha(alpha);
+		alpha = alpha + 0.05;
+		if(alpha > 1) then
+			self:SetScript("OnUpdate", nil);
+		end
+	end);
 end
 
 
@@ -279,8 +290,8 @@ local function startInteraction()
 	letterBox.text = splitText(letterBox.text);
 	letterBox.textIndex = 1;
 	
-	letterBox.questText:Hide();
 	letterBox.questText:SetText(letterBox.text[letterBox.textIndex]);
+	
 	animateText(letterBox.questText);
 end
 
@@ -435,7 +446,6 @@ local function setUpLetterBox()
 	end);
 	
 	
-	letterBox:Hide();
 	letterBox:EnableMouse(true);
 	letterBox:SetScript("OnMouseUp", function(self, button)
 		if(not isTextAnimating() and (self.textIndex == #self.text or #self.text == 0)) then
@@ -464,12 +474,13 @@ local function setUpLetterBox()
 			animationFrame:SetScript("OnUpdate", nil);
 		else
 			self.textIndex = self.textIndex + 1;
-			letterBox.questText:Hide();
 			self.questText:SetText(self.text[self.textIndex]);
 			animateText(self.questText);
 		end
 		
 	end);
+	
+	letterBox:Hide();
 	
 	
 	--DECRECATED (events will now handle visibility) - Still gonna keep this if future bugs arise.
