@@ -239,11 +239,11 @@ local function hideLetterBox()
 	
 	end);
 	
-	UIFrameFadeOut(letterBox, 0.25, 1, 0);
-	local total = 0;
+	local alpha = letterBox:GetAlpha();
 	letterBox:SetScript("OnUpdate", function(self, elapsed)
-		total = total + elapsed;
-		if(total > 0.25) then
+		letterBox:SetAlpha(alpha);
+		alpha = alpha - 0.05;
+		if(alpha < 0) then
 			letterBox:SetScript("OnUpdate", nil);
 			letterBox:Hide();
 		end
@@ -258,6 +258,7 @@ end
 --
 -------------------------------------
 local function showLetterBox()
+	frameFader:SetScript("OnUpdate", nil);
 	UIParent:SetAlpha(0);
 	WorldFrame:SetFrameStrata("FULLSCREEN_DIALOG");
 	MinimapCluster:Hide(); --Minimap icons aren't affected with "SetAlpha"
@@ -380,9 +381,12 @@ local function createQuestRewardPanel()
 		
 		btn:SetScript("OnLeave", function()
 			GameTooltip:SetParent(UIParent);
+			GameTooltip:SetFrameStrata("TOOLTIP"); --it seems we need to do this after setting a new parent. DO SOME TESTS
 			GameTooltip:Hide();
-			ShoppingTooltip1:SetParent(UIParent);
-			ShoppingTooltip2:SetParent(UIParent);
+			for i=1,2 do
+				_G["ShoppingTooltip"..i]:SetParent(UIParent);
+				_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
+			end
 			ResetCursor();
 		end);
 		
@@ -536,9 +540,13 @@ local function onGossipShow()
 end
 
 
-local function onQuestDetail()
+local function onQuestDetail(questStartItemID)
+	if(questStartItemID and questStartItemID ~= 0) then
+		return;
+	end
 	cancelTimer();
 	SetView(2);
+	
 	letterBox.text = GetQuestText();
 	
 	letterBox.acceptButton.fontString:SetText("Accept");
@@ -559,6 +567,7 @@ end
 local function onQuestProgress()
 	cancelTimer();
 	SetView(2);
+	
 	letterBox.text = GetProgressText();
 	
 	letterBox.acceptButton.fontString:SetText("Continue");
@@ -574,6 +583,7 @@ end
 
 local function onQuestComplete()
 	cancelTimer();
+	SetView(2);
 	if(not letterBox:IsShown()) then
 		showLetterBox();
 	end
@@ -670,9 +680,9 @@ SlashCmdList["CatchTheWind"] = SlashCmd;
 -- Handled events can be checked right after this function.
 --
 -------------------------------------
-Addon:SetScript("OnEvent", function(self, event)
+Addon:SetScript("OnEvent", function(self, event, ...)
 	if(Addon.scripts[event]) then
-		Addon.scripts[event]();
+		Addon.scripts[event](...);
 	elseif(event == "GOSSIP_CLOSED" or event == "MERCHANT_CLOSED" or event == "TRAINER_CLOSED" or event == "QUEST_FINISHED" or event == "TAXIMAP_CLOSED") then
 		--a timer is needed because when interacting with merchants/trainers or choosing quests, "GOSSIP_CLOSED" will be
 		--triggered and right after a "MERCHANT_SHOW" will pop up and cancel this timer.
