@@ -12,7 +12,7 @@ local factorTextSpeed = 1;
 --x * GetTitleText + GetProgressText + GetObjectiveText + GetRewardText
 -- * Set a close-plan to player when deciding "ACCEPT/DECLINE" and choosing rewards. (check for libCameras)
 --x * Mouse-Click shows all the message (if it's still animating). Another click passes to the next line.
--- * SpaceBar shows all the message. This may bring problems because we have to enable keyboard.
+--x * SpaceBar shows all the message. This may bring problems because we have to enable keyboard.
 -- * Try display all the rewards even if there isn't any to choose from (i.e. when there is only 1 reward) - Checkout QuestInfo.lua
 --
 -- * Start to think in moving GUI (frames and buttons) to a XML file
@@ -23,7 +23,7 @@ local factorTextSpeed = 1;
 -- BUGS:
 --x * SaveView cancels auto-follow cam
 --x * Legion: There are quests with just one QuestReward. At the moment, NumChoicesQuests are saying those are "choices, which is not. Solution: Check if it's num choices are >1, or check if the text contains has: "Choose your reward"
--- * Legion: Quests that pop up from mobs are messing up the addOn (need more info)
+--x * Legion: Quests that pop up from mobs are messing up the addOn (need more info)
 
 --x = Done/Fixed
 
@@ -112,22 +112,18 @@ end
 -- Used to create the "Accept"/"Decline" buttons.
 -- @param #string name : the button's name
 -- @param #frame parent : the frame that will be attached
--- @param #string point : the anchor's point
--- @param #number xOfs : the variation in the X axis from the anchor
--- @param #number yOfs : the variation in the Y axis from the anchor
 -- @param #function onClickFunc : the function that will be executed whenever this button is pressed
 -- @return #frame buttonFrame: the button itself
 --
 -------------------------------------
-local function createButton(name, parent, text, point, xOfs, yOfs, onClickFunc)
+local function createButton(name, parent, text, onClickFunc)
 	local buttonFrame = CreateFrame("FRAME", name, parent);
 	buttonFrame:SetSize(200,50);
-	buttonFrame:SetPoint(point, xOfs, yOfs);
 	
 	buttonFrame.fontString = buttonFrame:CreateFontString();
 	buttonFrame.fontString:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE");
 	buttonFrame.fontString:SetText(text);
-	buttonFrame.fontString:SetTextColor(0.3, 0.3, 0.3, 1);
+	buttonFrame.fontString:SetTextColor(0.45, 0.45, 0.45, 1);
 	buttonFrame.fontString:SetPoint("CENTER");
 	
 	buttonFrame:EnableMouse(true);
@@ -140,6 +136,7 @@ local function createButton(name, parent, text, point, xOfs, yOfs, onClickFunc)
 	end);
 	
 	buttonFrame:SetScript("OnShow", function(self)
+		self.fontString:SetTextColor(0.45, 0.45, 0.45, 1);
 		UIFrameFadeIn(self, 0.5, 0, 1);
 	end);
 	
@@ -248,6 +245,8 @@ local function hideLetterBox()
 			letterBox:Hide();
 		end
 	end);
+
+	letterBox:EnableKeyboard(false);
 end
 
 
@@ -258,6 +257,9 @@ end
 --
 -------------------------------------
 local function showLetterBox()
+	if(IsModifierKeyDown()) then
+		return;
+	end
 	frameFader:SetScript("OnUpdate", nil);
 	UIParent:SetAlpha(0);
 	WorldFrame:SetFrameStrata("FULLSCREEN_DIALOG");
@@ -273,6 +275,8 @@ local function showLetterBox()
 			self:SetScript("OnUpdate", nil);
 		end
 	end);
+	letterBox.selectedButton = nil;
+	letterBox:EnableKeyboard(true);
 end
 
 
@@ -291,6 +295,7 @@ local function startInteraction()
 	letterBox.text = splitText(letterBox.text);
 	letterBox.textIndex = 1;
 	
+	letterBox.prevQuestText:SetText("");
 	letterBox.questText:SetText(letterBox.text[letterBox.textIndex]);
 	
 	animateText(letterBox.questText);
@@ -343,65 +348,67 @@ local function createQuestRewardPanel()
 	--refactor > extract code
 	
 	for i=1, 10 do
-		local btn = CreateFrame("BUTTON", "CTWrewardPanelItem"..i, letterBox.rewardPanel, "LargeItemButtonTemplate, QuestInfoRewardItemCodeTemplate");
-		btn:SetSize(48,48);
-		
-		btn.type = "choice";
-		btn.objectType = "item";
-		
-		_G[btn:GetName().."NameFrame"]:Hide();
-		_G[btn:GetName().."Name"]:Hide();
-		
-		_G[btn:GetName().."IconTexture"]:SetTexCoord(0.075,0.925,0.075,0.925);
-		_G[btn:GetName().."IconTexture"]:SetSize(38,38)
-		_G[btn:GetName().."IconTexture"]:ClearAllPoints();
-		_G[btn:GetName().."IconTexture"]:SetPoint("CENTER", btn, 0, 0);
-		
-		btn:SetBackdrop(
-			{--bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-			edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-			tile = true, tileSize = 22, edgeSize = 22,
-			insets = { left = 6, right = 6, top = 6, bottom = 6 }}
-		);
-		
-		btn:SetPoint("CENTER", (-i)*56, -12);
-		
-		btn:SetScript("OnEnter", function(self)
-			GameTooltip:SetParent(WorldFrame);
-			GameTooltip:SetFrameStrata("TOOLTIP");
-			for i=1,2 do
-				_G["ShoppingTooltip"..i]:SetParent(WorldFrame);
-				_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
-			end
-			
-			GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-			GameTooltip:SetQuestItem(self.type, self:GetID());
-			GameTooltip_ShowCompareItem(GameTooltip);
-		end);
-		
-		btn:SetScript("OnLeave", function()
-			GameTooltip:SetParent(UIParent);
-			GameTooltip:SetFrameStrata("TOOLTIP"); --it seems we need to do this after setting a new parent. DO SOME TESTS
-			GameTooltip:Hide();
-			for i=1,2 do
-				_G["ShoppingTooltip"..i]:SetParent(UIParent);
-				_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
-			end
-			ResetCursor();
-		end);
-		
-		btn:SetScript("OnClick", function(self, button)
-			for i=1, GetNumQuestChoices() do
-				_G["CTWrewardPanelItem"..i.."IconTexture"]:SetVertexColor(0.5,0.5,0.5,1);
-			end
-			_G[self:GetName().."IconTexture"]:SetVertexColor(1,1,1,1);
-			QuestInfoItem_OnClick(self);
-		end);
-		
-		btn:Hide();
+		CreateFrame("BUTTON", "CTWrewardPanelItem"..i, letterBox.rewardPanel, "CTWItemButtonTemplate");
 	end
 	
 	letterBox.rewardPanel:Hide();
+end
+
+
+local function onClickKey(self)
+	if(not isTextAnimating() and (self.textIndex == #self.text or #self.text == 0)) then
+	
+		if(self.acceptButton.fontString:GetText() == "Continue") then
+			if(IsQuestCompletable()) then
+				self.acceptButton:Show();
+			else
+				self.acceptButton:Hide();
+			end
+		else
+			self.acceptButton:Show();
+		end
+
+		if(self.acceptButton.fontString:GetText() == "Thank you" and 
+		self.textIndex == #self.text and GetNumQuestChoices() > 1 and
+		not self.rewardPanel:IsShown()) then
+			UIFrameFadeIn(self.rewardPanel, 0.5, 0, 1);
+		end
+		
+		self.declineButton:Show();
+		
+		--checks if the questText is not empty, then hides the text and makes
+		if(self.questText:GetText()) then
+			--hides questText
+			self.questText:SetText("");
+			--show oldText
+			self.prevQuestText:SetText(self.text[self.textIndex]);
+			UIFrameFadeIn(self.prevQuestText, 0.5, 0, 1);
+		end
+		
+		--rearrange buttons
+		local screenHeight = GetScreenHeight()*UIParent:GetEffectiveScale();
+		if(self.acceptButton:IsShown()) then
+			self.acceptButton:SetPoint("BOTTOM", 100, screenHeight/28);
+			self.declineButton:SetPoint("BOTTOM", -100, screenHeight/28);
+		else
+			self.declineButton:SetPoint("BOTTOM", 0, screenHeight/28);
+		end
+		
+		
+		return;
+	end
+	--checks if the text is fading in, if yes, shows the rest.
+	if(isTextAnimating()) then
+		self.questText:SetAlphaGradient(string.len(self.questText:GetText()),1);
+		isAnimating = false;
+		animationFrame:SetScript("OnUpdate", nil);
+	else
+		self.prevQuestText:SetText(self.text[self.textIndex]);
+		UIFrameFadeIn(self.prevQuestText, 0.5, 0, 1);
+		self.textIndex = self.textIndex + 1;
+		self.questText:SetText(self.text[self.textIndex]);
+		animateText(self.questText);
+	end
 end
 
 
@@ -437,51 +444,52 @@ local function setUpLetterBox()
 	letterBox.questText:SetTextColor(0.9, 0.9, 0.9, 1);
 	letterBox.questText:SetPoint("BOTTOM", 0, 0);
 	
+	--fontString that shows the previous quest text, the previous line that the player read
+	letterBox.prevQuestText = letterBox:CreateFontString(nil, "OVERLAY");
+	letterBox.prevQuestText:SetSize(screenWidth*0.75, screenHeight/7)
+	letterBox.prevQuestText:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE"); --WoW Font
+	letterBox.prevQuestText:SetTextColor(0.5, 0.5, 0.5, 1);
+	letterBox.prevQuestText:SetPoint("TOP", 0, 0);
 	
 	createQuestRewardPanel();
 	
 	
-	letterBox.acceptButton = createButton("CTWacceptButton", letterBox, "Accept", "BOTTOMRIGHT", 0, screenHeight/28, function(self, button)
+	letterBox.acceptButton = createButton("CTWacceptButton", letterBox, "Accept", function(self, button)
 		QuestDetailAcceptButton_OnClick();
 	end);
 
-	letterBox.declineButton = createButton("CTWdeclineButton", letterBox, "Decline", "BOTTOMLEFT", 0, screenHeight/28, function(self, button)
+	letterBox.declineButton = createButton("CTWdeclineButton", letterBox, "Decline", function(self, button)
 		QuestDetailDeclineButton_OnClick();
 	end);
 	
 	
 	letterBox:EnableMouse(true);
 	letterBox:SetScript("OnMouseUp", function(self, button)
-		if(not isTextAnimating() and (self.textIndex == #self.text or #self.text == 0)) then
-			if(self.acceptButton.fontString:GetText() == "Continue") then
-				if(IsQuestCompletable()) then
-					self.acceptButton:Show();
-				else
-					self.acceptButton:Hide();
-				end
+		onClickKey(self);
+	end);
+	
+	letterBox:SetScript("OnKeyUp", function(self, key)
+		--SPACE, ESCAPE, A, D
+		if(key == "SPACE") then
+			if(self.selectedButton and (self.acceptButton:IsShown() or self.declineButton:IsShown())) then
+				self.selectedButton:GetScript("OnMouseUp")();
 			else
-				self.acceptButton:Show();
+				onClickKey(self);
 			end
-			if(self.acceptButton.fontString:GetText() == "Thank you" and 
-			self.textIndex == #self.text and GetNumQuestChoices() > 1 and
-			not self.rewardPanel:IsShown()) then
-				UIFrameFadeIn(self.rewardPanel, 0.5, 0, 1);
-			end
-			
-			self.declineButton:Show();
-			return;
+		elseif(key == "ESCAPE") then
+			securecall("CloseAllWindows");
+		elseif(key == "D" and self.acceptButton:IsShown()) then
+			self.selectedButton = self.acceptButton;
+			self.acceptButton.fontString:SetTextColor(1, 1, 1, 1);
+			self.declineButton.fontString:SetTextColor(0.45, 0.45, 0.45, 1);
+		elseif(key == "A" and self.declineButton:IsShown()) then
+			self.selectedButton = self.declineButton;
+			self.declineButton.fontString:SetTextColor(1, 1, 1, 1);
+			self.acceptButton.fontString:SetTextColor(0.45, 0.45, 0.45, 1);
+		elseif(key == "F10") then
+			hideLetterBox();
 		end
-		--checks if the text is fading in, if yes, shows the rest.
-		if(isTextAnimating()) then
-			self.questText:SetAlphaGradient(string.len(self.questText:GetText()),1);
-			isAnimating = false;
-			animationFrame:SetScript("OnUpdate", nil);
-		else
-			self.textIndex = self.textIndex + 1;
-			self.questText:SetText(self.text[self.textIndex]);
-			animateText(self.questText);
-		end
-		
+
 	end);
 	
 	letterBox:Hide();

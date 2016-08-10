@@ -1,0 +1,69 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+
+	<!--QuestItem Button Template -->
+	<Button name="CTWItemButtonTemplate" hidden="true" inherits="LargeItemButtonTemplate, QuestInfoRewardItemCodeTemplate" virtual="true">
+	
+		<Size x="48" y="48"/>
+		
+		<Backdrop edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="6" right="6" top="6" bottom="6"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="22"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="22"/>
+			</EdgeSize>
+		</Backdrop>
+		
+		<Scripts>
+			<OnLoad>
+				self.type = "choice";
+				self.objectType = "item";
+			
+				_G[self:GetName().."NameFrame"]:Hide();
+				_G[self:GetName().."Name"]:Hide();
+				
+				_G[self:GetName().."IconTexture"]:SetTexCoord(0.075,0.925,0.075,0.925);
+				_G[self:GetName().."IconTexture"]:SetSize(38,38);
+				_G[self:GetName().."IconTexture"]:ClearAllPoints();
+				_G[self:GetName().."IconTexture"]:SetPoint("CENTER", self, 0, 0);
+			</OnLoad>
+			
+			<OnEnter>
+				GameTooltip:SetParent(WorldFrame);
+				GameTooltip:SetFrameStrata("TOOLTIP");
+				for i=1,2 do
+					_G["ShoppingTooltip"..i]:SetParent(WorldFrame);
+					_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
+				end
+				
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+				GameTooltip:SetQuestItem(self.type, self:GetID());
+				GameTooltip_ShowCompareItem(GameTooltip);
+			</OnEnter>
+			
+			<OnLeave>
+				GameTooltip:SetParent(UIParent);
+				GameTooltip:SetFrameStrata("TOOLTIP");
+				GameTooltip:Hide();
+				for i=1,2 do
+					_G["ShoppingTooltip"..i]:SetParent(UIParent);
+					_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
+				end
+				ResetCursor();
+			</OnLeave>
+			
+			<OnClick>
+				for i=1, GetNumQuestChoices() do
+					_G["CTWrewardPanelItem"..i.."IconTexture"]:SetVertexColor(0.35,0.35,0.35,1);
+				end
+				_G[self:GetName().."IconTexture"]:SetVertexColor(1,1,1,1);
+				QuestInfoItem_OnClick(self);
+			</OnClick>
+		</Scripts>
+		
+	</Button>
+ 
+</Ui>
