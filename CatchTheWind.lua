@@ -4,6 +4,8 @@ local Addon = CreateFrame("FRAME");
 local letterBox;
 --Variable Quest Text Speed
 local factorTextSpeed = 1;
+--Font to be used in QuestText
+local blizzardFont;
 
 --TODO
 --CatchTheWind
@@ -11,8 +13,6 @@ local factorTextSpeed = 1;
 -- Cinematic Quests AddOn
 --x * GetTitleText + GetProgressText + GetObjectiveText + GetRewardText
 -- * Set a close-plan to player when deciding "ACCEPT/DECLINE" and choosing rewards. (check for libCameras)
---x * Mouse-Click shows all the message (if it's still animating). Another click passes to the next line.
---x * SpaceBar shows all the message. This may bring problems because we have to enable keyboard.
 -- * Try display all the rewards even if there isn't any to choose from (i.e. when there is only 1 reward) - Checkout QuestInfo.lua
 --
 -- * Start to think in moving GUI (frames and buttons) to a XML file
@@ -136,7 +136,6 @@ local function createButton(name, parent, text, onClickFunc)
 	end);
 	
 	buttonFrame:SetScript("OnShow", function(self)
-		self.fontString:SetTextColor(0.45, 0.45, 0.45, 1);
 		UIFrameFadeIn(self, 0.5, 0, 1);
 	end);
 	
@@ -160,11 +159,17 @@ local function animateText(fontString)
 	fontString:SetAlphaGradient(0,20);
 	isAnimating = true;
 	animationFrame:SetScript("OnUpdate", function(self, elapsed)
-		numChars = numChars + 0.25*factorTextSpeed;
+		total = total + elapsed;
+		--setting alphaGradient here because when changing Parent's alpha, it also disables alphaGradient effect.
 		fontString:SetAlphaGradient(numChars,20);
-		if(numChars >= string.len(fontString:GetText() or "")) then
-			isAnimating = false;
-			self:SetScript("OnUpdate", nil);
+		if(total > 0.02) then
+			total = 0;
+			numChars = numChars + factorTextSpeed;
+			--fontString:SetAlphaGradient(numChars,20);
+			if(numChars >= string.len(fontString:GetText() or "")) then
+				isAnimating = false;
+				self:SetScript("OnUpdate", nil);
+			end
 		end
 	end);
 end
@@ -195,6 +200,9 @@ local currentView = -1;
 --
 -------------------------------------
 local function SetView(view)
+	if (not CatchTheWindSV[UnitName("player")]["CameraEnabled"]) then
+		return;
+	end
 	if not (view == currentView) then
 		currentView = view;
 		blizz_SetView(view);
@@ -208,9 +216,6 @@ end
 
 
 
---Frame Fader
-local frameFader = CreateFrame("FRAME");
-
 -------------------------------------
 --
 -- Hides the letterbox and its containers.
@@ -223,28 +228,11 @@ local function hideLetterBox()
 		return;
 	end
 	--UIFrameFadeIn(UIParent, 0.25, 0, 1);	It's not advised to use UIFrameFade on "UIParent" because it taints the code
-	local alpha = UIParent:GetAlpha();
 	MinimapCluster:Show();
 	WorldFrame:SetFrameStrata("BACKGROUND");
-	frameFader:SetScript("OnUpdate", function(self, elapsed)
-		if(alpha < 1) then
-			alpha = alpha + 0.05;
-			UIParent:SetAlpha(alpha);
-		else
-			frameFader:SetScript("OnUpdate", nil);
-		end
+	frameFade(UIParent, 0.25, 0, 1);
 	
-	end);
-	
-	local alpha = letterBox:GetAlpha();
-	letterBox:SetScript("OnUpdate", function(self, elapsed)
-		letterBox:SetAlpha(alpha);
-		alpha = alpha - 0.05;
-		if(alpha < 0) then
-			letterBox:SetScript("OnUpdate", nil);
-			letterBox:Hide();
-		end
-	end);
+	frameFade(letterBox, 0.25, 1, 0, true);	
 
 	letterBox:EnableKeyboard(false);
 end
@@ -260,12 +248,14 @@ local function showLetterBox()
 	if(IsModifierKeyDown()) then
 		return;
 	end
-	frameFader:SetScript("OnUpdate", nil);
+
 	UIParent:SetAlpha(0);
 	WorldFrame:SetFrameStrata("FULLSCREEN_DIALOG");
-	MinimapCluster:Hide(); --Minimap icons aren't affected with "SetAlpha"
+	MinimapCluster:Hide(); --Minimap icons aren't affected by "SetAlpha"
 	--UIFrameFadeIn(letterBox, 0.25, 0, 1);
-	--I can't use UIFrameFadeIn because it uses "Frame:Show()" which makes all childs to be shown - Problems: QuestText is displayed instantly for a second.
+	--I can't use UIFrameFadeIn because it uses "Frame:SetAlpha()" which makes all childs to be shown - Problems: QuestText is displayed instantly for a second.
+	--frameFade(letterBox, 0.25, 0, 1);
+	--TODO: Weird stuff is happening here. UIFrameFadeIn and frameFade (from Utils.lua) are not doing the job. QuestText is being showed fully because of SetAlpha() from its parent. It's removing SetAlphaGradient from FontString...
 	local alpha = letterBox:GetAlpha();
 	letterBox:Show();
 	letterBox:SetScript("OnUpdate", function(self, elapsed)
@@ -382,7 +372,7 @@ local function onClickKey(self)
 			self.questText:SetText("");
 			--show oldText
 			self.prevQuestText:SetText(self.text[self.textIndex]);
-			UIFrameFadeIn(self.prevQuestText, 0.5, 0, 1);
+			frameFade(self.prevQuestText, 0.5, 0, 1);
 		end
 		
 		--rearrange buttons
@@ -404,7 +394,7 @@ local function onClickKey(self)
 		animationFrame:SetScript("OnUpdate", nil);
 	else
 		self.prevQuestText:SetText(self.text[self.textIndex]);
-		UIFrameFadeIn(self.prevQuestText, 0.5, 0, 1);
+		frameFade(self.prevQuestText, 0.5, 0, 1);
 		self.textIndex = self.textIndex + 1;
 		self.questText:SetText(self.text[self.textIndex]);
 		animateText(self.questText);
@@ -440,14 +430,14 @@ local function setUpLetterBox()
 	
 	letterBox.questText = letterBox:CreateFontString(nil, "OVERLAY");
 	letterBox.questText:SetSize(screenWidth*0.75, screenHeight/7)
-	letterBox.questText:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE"); --WoW Font
+	letterBox.questText:SetFont(blizzardFont, 16, "OUTLINE"); --WoW Font
 	letterBox.questText:SetTextColor(0.9, 0.9, 0.9, 1);
 	letterBox.questText:SetPoint("BOTTOM", 0, 0);
 	
 	--fontString that shows the previous quest text, the previous line that the player read
 	letterBox.prevQuestText = letterBox:CreateFontString(nil, "OVERLAY");
 	letterBox.prevQuestText:SetSize(screenWidth*0.75, screenHeight/7)
-	letterBox.prevQuestText:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE"); --WoW Font
+	letterBox.prevQuestText:SetFont(blizzardFont, 16, "OUTLINE"); --WoW Font
 	letterBox.prevQuestText:SetTextColor(0.5, 0.5, 0.5, 1);
 	letterBox.prevQuestText:SetPoint("TOP", 0, 0);
 	
@@ -478,6 +468,7 @@ local function setUpLetterBox()
 			end
 		elseif(key == "ESCAPE") then
 			securecall("CloseAllWindows");
+			animationFrame:SetScript("OnUpdate", nil);
 		elseif(key == "D" and self.acceptButton:IsShown()) then
 			self.selectedButton = self.acceptButton;
 			self.acceptButton.fontString:SetTextColor(1, 1, 1, 1);
@@ -508,7 +499,7 @@ end
 -------------------------------------
 --
 -- Load SavedVariables.
--- If there is no SVs, then it creates them.
+-- If there are no SVs, then it creates them.
 --
 -------------------------------------
 local function loadSavedVariables()
@@ -531,27 +522,46 @@ end
 --
 --Some funcitons that will be used later for events.
 
+--Locale fonts - Used to set the correct quest text font
+local localeFonts = {
+	["zhCN"] = "Fonts\\ARKai_T.TTF",
+	["ruRU"] = "Fonts\\FRIZQT___CYR.TTF",
+	["zhTW"] = "Fonts\\bLEI00D.TTF",
+	["koKR"] = "Fonts\\2002.TTF",
+}
+
+
 local function onPlayerLogin()
-	--SaveView(5);		--SaveView completely disables the auto-follow camera
-	--Who used the addOn until now, will have the View5 bugged.
-	--This will be fixed in the next update.
-	for i=1,5 do
-		ResetView(i);
-	end
+	--setting the correct font (Chinese, Russian, etc)
+	blizzardFont = localeFonts[GetLocale()] or "Fonts\\FRIZQT__.TTF";
+
 	setUpLetterBox();
 	loadSavedVariables();
+	
+	if(CatchTheWindSV[UnitName("player")]["SaveView"]) then
+		SaveView(5);
+	end
+	if(not CatchTheWindSV[UnitName("player")]["ShowPreviousText"]) then
+		letterBox.prevQuestText:SetTextColor(0,0,0,0); --TODO: this is a quick fix to hide the text - clean this after
+	end
 end
+
 
 local function onGossipShow()
 	cancelTimer();
-	SetView(2);
+	if(GetNumGossipAvailableQuests() > 0) then
+		SetView(2);
+	end
 end
 
 
 local function onQuestDetail(questStartItemID)
-	if(questStartItemID and questStartItemID ~= 0) then
+	if (questStartItemID and questStartItemID ~= 0) or
+		(QuestGetAutoAccept() and QuestIsFromAreaTrigger()) or
+		(QuestIsFromAdventureMap()) then
 		return;
 	end
+	
 	cancelTimer();
 	SetView(2);
 	
@@ -622,7 +632,7 @@ local function onQuestComplete()
 			
 			local name, texture, numItems, quality, isUsable = GetQuestItemInfo(btn.type, i);
 			SetItemButtonTexture(btn, texture);
-			_G[btn:GetName().."IconTexture"]:SetVertexColor(0.5,0.5,0.5,1);
+			_G[btn:GetName().."IconTexture"]:SetVertexColor(0.35,0.35,0.35,1);
 
 			btn:SetPoint("CENTER", (i-1)*64-(GetNumQuestChoices()/2*64)+32, -12)
 			btn:SetID(i);
@@ -667,14 +677,44 @@ SLASH_CatchTheWind1, SLASH_CatchTheWind2 = "/catchthewind", "/ctw";
 --
 -------------------------------------
 local function SlashCmd(cmd)
-    if (cmd:match"textSpeed") then
+    if(cmd:match("textSpeed")) then
         local factor = tonumber(strtrim(cmd:sub(cmd:find("textSpeed")+9, -1)));
 		factorTextSpeed = factor;
 		CatchTheWindSV[UnitName("player")]["FactorTextSpeed"] = factor;
 		printMessage("CatchTheWind: The text speed is now "..factor.."x faster than the default speed.");
+    elseif(cmd == "" or cmd:match("config")) then
+    	if(not CatchTheWindConfig:IsShown()) then
+    		frameFade(CatchTheWindConfig, 0.25, 0, 1);
+    	else
+    		frameFade(CatchTheWindConfig, 0.25, 1, 0, true);
+    	end
+    elseif(cmd:match("fixCam")) then
+    	local total, reseting, i = 0, false, 1;
+    	print("Please wait...");
+		timer:SetScript("OnUpdate", function(self, elapsed)
+			total = total + elapsed;
+			if(total > 1 and not reseting) then
+				SetView(i);
+				print("Reseting view #"..i);
+				total = 0;
+				reseting = true;
+				ResetView(i);
+			elseif(total > 2 and reseting) then
+				total = 0;
+				reseting = false;
+				SaveView(i);
+				i = i + 1;
+				if(i > 5) then
+					self:SetScript("OnUpdate", nil);
+					print("Work complete");
+				end
+			end
+		
+		end);
     else
     	printMessage("CatchTheWind Commands:");
-    	printMessage("      /ctw textSpeed x -> where x is the factor.");
+    	printMessage("      /ctw textSpeed x : Where x is the factor.");
+    	printMessage("      /ctw fixCam : If you are having problems with the camera (i.e. not following your back).");
     end
 end
 
@@ -701,7 +741,7 @@ Addon:SetScript("OnEvent", function(self, event, ...)
 			SetView(5);
 		end);
 	elseif(event == "MERCHANT_SHOW" or event == "TRAINER_SHOW" or event == "TAXIMAP_OPENED") then
-		SetView(2);
+		--SetView(2);
 		cancelTimer();
 	end
 end);
