@@ -215,6 +215,8 @@ end
 -------------------------------
 
 
+--Frame Fader
+local frameFader = CreateFrame("FRAME");
 
 -------------------------------------
 --
@@ -230,7 +232,7 @@ local function hideLetterBox()
 	--UIFrameFadeIn(UIParent, 0.25, 0, 1);	It's not advised to use UIFrameFade on "UIParent" because it taints the code
 	local alpha = UIParent:GetAlpha();
 	MinimapCluster:Show();
-	WorldFrame:SetFrameStrata("BACKGROUND");
+	--WorldFrame:SetFrameStrata("BACKGROUND");
 	frameFader:SetScript("OnUpdate", function(self, elapsed)
 		if(alpha < 1) then
 			alpha = alpha + 0.05;
@@ -267,7 +269,7 @@ local function showLetterBox()
 	end
 
 	UIParent:SetAlpha(0);
-	WorldFrame:SetFrameStrata("FULLSCREEN_DIALOG");
+	--WorldFrame:SetFrameStrata("FULLSCREEN_DIALOG");
 	MinimapCluster:Hide(); --Minimap icons aren't affected by "SetAlpha"
 	--UIFrameFadeIn(letterBox, 0.25, 0, 1);
 	--I can't use UIFrameFadeIn because it uses "Frame:SetAlpha()" which makes all childs to be shown - Problems: QuestText is displayed instantly for a second.
@@ -428,7 +430,7 @@ local function setUpLetterBox()
 	local screenWidth = GetScreenWidth()*UIParent:GetEffectiveScale();
 	local screenHeight = GetScreenHeight()*UIParent:GetEffectiveScale();
 	
-	letterBox = CreateFrame("FRAME", "CatchTheWind", WorldFrame);
+	letterBox = CreateFrame("FRAME", "CatchTheWind", nil);
 	letterBox:SetAllPoints();
 	
 	letterBox:SetFrameStrata("FULLSCREEN_DIALOG");
@@ -447,14 +449,14 @@ local function setUpLetterBox()
 	
 	letterBox.questText = letterBox:CreateFontString(nil, "OVERLAY");
 	letterBox.questText:SetSize(screenWidth*0.75, screenHeight/7)
-	letterBox.questText:SetFont(blizzardFont, 16, "OUTLINE"); --WoW Font
+	letterBox.questText:SetFont(blizzardFont, 16, "OUTLINE");
 	letterBox.questText:SetTextColor(0.9, 0.9, 0.9, 1);
 	letterBox.questText:SetPoint("BOTTOM", 0, 0);
 	
 	--fontString that shows the previous quest text, the previous line that the player read
 	letterBox.prevQuestText = letterBox:CreateFontString(nil, "OVERLAY");
 	letterBox.prevQuestText:SetSize(screenWidth*0.75, screenHeight/7)
-	letterBox.prevQuestText:SetFont(blizzardFont, 16, "OUTLINE"); --WoW Font
+	letterBox.prevQuestText:SetFont(blizzardFont, 16, "OUTLINE");
 	letterBox.prevQuestText:SetTextColor(0.5, 0.5, 0.5, 1);
 	letterBox.prevQuestText:SetPoint("TOP", 0, 0);
 	
