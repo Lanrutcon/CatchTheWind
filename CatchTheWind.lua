@@ -228,11 +228,28 @@ local function hideLetterBox()
 		return;
 	end
 	--UIFrameFadeIn(UIParent, 0.25, 0, 1);	It's not advised to use UIFrameFade on "UIParent" because it taints the code
+	local alpha = UIParent:GetAlpha();
 	MinimapCluster:Show();
 	WorldFrame:SetFrameStrata("BACKGROUND");
-	frameFade(UIParent, 0.25, 0, 1);
+	frameFader:SetScript("OnUpdate", function(self, elapsed)
+		if(alpha < 1) then
+			alpha = alpha + 0.05;
+			UIParent:SetAlpha(alpha);
+		else
+			frameFader:SetScript("OnUpdate", nil);
+		end
 	
-	frameFade(letterBox, 0.25, 1, 0, true);	
+	end);
+	
+	local alpha = letterBox:GetAlpha();
+	letterBox:SetScript("OnUpdate", function(self, elapsed)
+		letterBox:SetAlpha(alpha);
+		alpha = alpha - 0.05;
+		if(alpha < 0) then
+			letterBox:SetScript("OnUpdate", nil);
+			letterBox:Hide();
+		end
+	end);
 
 	letterBox:EnableKeyboard(false);
 end
@@ -544,6 +561,21 @@ local function onPlayerLogin()
 	if(not CatchTheWindSV[UnitName("player")]["ShowPreviousText"]) then
 		letterBox.prevQuestText:SetTextColor(0,0,0,0); --TODO: this is a quick fix to hide the text - clean this after
 	end
+	
+	Addon:RegisterEvent("GOSSIP_SHOW");
+	Addon:RegisterEvent("MERCHANT_SHOW");
+	Addon:RegisterEvent("TRAINER_SHOW");
+	Addon:RegisterEvent("TAXIMAP_OPENED");
+
+	Addon:RegisterEvent("GOSSIP_CLOSED");
+	Addon:RegisterEvent("MERCHANT_CLOSED");
+	Addon:RegisterEvent("TRAINER_CLOSED");
+	Addon:RegisterEvent("TAXIMAP_CLOSED");
+
+	Addon:RegisterEvent("QUEST_DETAIL");
+	Addon:RegisterEvent("QUEST_PROGRESS");
+	Addon:RegisterEvent("QUEST_COMPLETE");
+	Addon:RegisterEvent("QUEST_FINISHED");
 end
 
 
@@ -747,19 +779,6 @@ Addon:SetScript("OnEvent", function(self, event, ...)
 end);
 
 
-Addon:RegisterEvent("GOSSIP_SHOW");
-Addon:RegisterEvent("MERCHANT_SHOW");
-Addon:RegisterEvent("TRAINER_SHOW");
-Addon:RegisterEvent("TAXIMAP_OPENED");
 
-Addon:RegisterEvent("GOSSIP_CLOSED");
-Addon:RegisterEvent("MERCHANT_CLOSED");
-Addon:RegisterEvent("TRAINER_CLOSED");
-Addon:RegisterEvent("TAXIMAP_CLOSED");
-
-Addon:RegisterEvent("QUEST_DETAIL");
-Addon:RegisterEvent("QUEST_PROGRESS");
-Addon:RegisterEvent("QUEST_COMPLETE");
-Addon:RegisterEvent("QUEST_FINISHED");
 
 Addon:RegisterEvent("PLAYER_LOGIN");
