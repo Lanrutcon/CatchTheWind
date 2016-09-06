@@ -32,10 +32,10 @@
 			</OnLoad>
 			
 			<OnEnter>
-				GameTooltip:SetParent(WorldFrame);
+				GameTooltip:SetParent(CatchTheWind);
 				GameTooltip:SetFrameStrata("TOOLTIP");
 				for i=1,2 do
-					_G["ShoppingTooltip"..i]:SetParent(WorldFrame);
+					_G["ShoppingTooltip"..i]:SetParent(CatchTheWind);
 					_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
 				end
 				

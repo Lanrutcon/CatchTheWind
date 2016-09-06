@@ -232,7 +232,6 @@ local function hideLetterBox()
 	--UIFrameFadeIn(UIParent, 0.25, 0, 1);	It's not advised to use UIFrameFade on "UIParent" because it taints the code
 	local alpha = UIParent:GetAlpha();
 	MinimapCluster:Show();
-	--WorldFrame:SetFrameStrata("BACKGROUND");
 	frameFader:SetScript("OnUpdate", function(self, elapsed)
 		if(alpha < 1) then
 			alpha = alpha + 0.05;
@@ -264,12 +263,11 @@ end
 --
 -------------------------------------
 local function showLetterBox()
-	if(IsModifierKeyDown()) then
+	if(IsModifierKeyDown() or not QuestFrame:IsShown()) then
 		return;
 	end
 
 	UIParent:SetAlpha(0);
-	--WorldFrame:SetFrameStrata("FULLSCREEN_DIALOG");
 	MinimapCluster:Hide(); --Minimap icons aren't affected by "SetAlpha"
 	--UIFrameFadeIn(letterBox, 0.25, 0, 1);
 	--I can't use UIFrameFadeIn because it uses "Frame:SetAlpha()" which makes all childs to be shown - Problems: QuestText is displayed instantly for a second.
@@ -434,7 +432,6 @@ local function setUpLetterBox()
 	letterBox:SetAllPoints();
 	
 	letterBox:SetFrameStrata("FULLSCREEN_DIALOG");
-	letterBox:SetFrameLevel(10);
 	
 	letterBox.bottomPanel = letterBox:CreateTexture();
 	letterBox.bottomPanel:SetColorTexture(0,0,0);
@@ -478,7 +475,7 @@ local function setUpLetterBox()
 	end);
 	
 	letterBox:SetScript("OnKeyUp", function(self, key)
-		--SPACE, ESCAPE, A, D
+		--SPACE, ESCAPE, A, D, F10, F12
 		if(key == "SPACE") then
 			if(self.selectedButton and (self.acceptButton:IsShown() or self.declineButton:IsShown())) then
 				self.selectedButton:GetScript("OnMouseUp")();
@@ -498,6 +495,8 @@ local function setUpLetterBox()
 			self.acceptButton.fontString:SetTextColor(0.45, 0.45, 0.45, 1);
 		elseif(key == "F10") then
 			hideLetterBox();
+		elseif(key == "F12") then
+			Screenshot();
 		end
 
 	end);
@@ -583,7 +582,7 @@ end
 
 local function onGossipShow()
 	cancelTimer();
-	if(GetNumGossipAvailableQuests() > 0) then
+	if(GetNumGossipAvailableQuests() + GetNumGossipActiveQuests() > 0) then
 		SetView(2);
 	end
 end
@@ -707,6 +706,7 @@ SLASH_CatchTheWind1, SLASH_CatchTheWind2 = "/catchthewind", "/ctw";
 -- SlashCommand function.
 -- Commands implemented:
 -- 						- textSpeed
+-- 						- fixCam
 -- @param #string cmd : the command that the player inputs
 --
 -------------------------------------
