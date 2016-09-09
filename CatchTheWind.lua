@@ -20,11 +20,6 @@ local blizzardFont;
 --
 -- Legion: QUEST PROGRESS > QUEST COMPLETE > QUEST TURNED IN
 
--- BUGS:
---x * SaveView cancels auto-follow cam
---x * Legion: There are quests with just one QuestReward. At the moment, NumChoicesQuests are saying those are "choices, which is not. Solution: Check if it's num choices are >1, or check if the text contains has: "Choose your reward"
---x * Legion: Quests that pop up from mobs are messing up the addOn (need more info)
-
 --x = Done/Fixed
 
 --------------------
@@ -155,11 +150,13 @@ local animationFrame, isAnimating = CreateFrame("FRAME");
 --
 -------------------------------------
 local function animateText(fontString)
-	local total, numChars = 0, 0;
+	local total, numChars, totalSfx = 0, 0, 0;
 	fontString:SetAlphaGradient(0,20);
 	isAnimating = true;
+	PlaySoundKitID(3093);
 	animationFrame:SetScript("OnUpdate", function(self, elapsed)
 		total = total + elapsed;
+		totalSfx = totalSfx + elapsed;
 		--setting alphaGradient here because when changing Parent's alpha, it also disables alphaGradient effect.
 		fontString:SetAlphaGradient(numChars,20);
 		if(total > 0.02) then
@@ -170,6 +167,10 @@ local function animateText(fontString)
 				isAnimating = false;
 				self:SetScript("OnUpdate", nil);
 			end
+		end
+		if(totalSfx > 1.4) then
+			totalSfx = 0;
+			PlaySoundKitID(3093);
 		end
 	end);
 end
@@ -242,6 +243,8 @@ local function hideLetterBox()
 	
 	end);
 	
+	CTWDressUpModel:Hide();
+	CTWHelpFrame:Hide();
 	local alpha = letterBox:GetAlpha();
 	letterBox:SetScript("OnUpdate", function(self, elapsed)
 		letterBox:SetAlpha(alpha);
@@ -266,7 +269,10 @@ local function showLetterBox()
 	if(IsModifierKeyDown() or not QuestFrame:IsShown()) then
 		return;
 	end
-
+	
+	--clearing frameFader
+	frameFader:SetScript("OnUpdate", nil);
+	
 	UIParent:SetAlpha(0);
 	MinimapCluster:Hide(); --Minimap icons aren't affected by "SetAlpha"
 	--UIFrameFadeIn(letterBox, 0.25, 0, 1);
@@ -362,6 +368,12 @@ local function createQuestRewardPanel()
 end
 
 
+-------------------------------------
+--
+-- Script function that will be used when the player clicks or presses SPACE when CTW is visible.
+-- @param #frame self : the frame that will be using this script
+--
+-------------------------------------
 local function onClickKey(self)
 	if(not isTextAnimating() and (self.textIndex == #self.text or #self.text == 0)) then
 	
@@ -457,6 +469,13 @@ local function setUpLetterBox()
 	letterBox.prevQuestText:SetTextColor(0.5, 0.5, 0.5, 1);
 	letterBox.prevQuestText:SetPoint("TOP", 0, 0);
 	
+	--setting up dressupmodel
+	CTWDressUpModel:SetParent(letterBox);
+	CTWDressUpModel:SetPoint("LEFT", 100, 0);
+	
+	CTWHelpFrame:SetParent(letterBox);
+	CTWHelpFrame:SetPoint("CENTER");
+	
 	createQuestRewardPanel();
 	
 	
@@ -493,6 +512,12 @@ local function setUpLetterBox()
 			self.selectedButton = self.declineButton;
 			self.declineButton.fontString:SetTextColor(1, 1, 1, 1);
 			self.acceptButton.fontString:SetTextColor(0.45, 0.45, 0.45, 1);
+		elseif(key == "F1") then
+			if(CTWHelpFrame:IsShown()) then
+				CTWHelpFrame:Hide();
+			else
+				CTWHelpFrame:Show();
+			end
 		elseif(key == "F10") then
 			hideLetterBox();
 		elseif(key == "F12") then
@@ -601,13 +626,10 @@ local function onQuestDetail(questStartItemID)
 	letterBox.text = GetQuestText();
 	
 	letterBox.acceptButton.fontString:SetText("Accept");
-	letterBox.acceptButton:SetScript("OnMouseUp", function(self, button)
-		QuestDetailAcceptButton_OnClick();
-	end);
+	letterBox.acceptButton:SetScript("OnMouseUp", QuestDetailAcceptButton_OnClick);
+	
 	letterBox.declineButton.fontString:SetText("Decline");
-	letterBox.declineButton:SetScript("OnMouseUp", function(self, button)
-		QuestDetailDeclineButton_OnClick();
-	end);
+	letterBox.declineButton:SetScript("OnMouseUp", QuestDetailDeclineButton_OnClick);
 	
 	showLetterBox();
 	

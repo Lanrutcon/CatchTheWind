@@ -1,9 +1,9 @@
 --Similar to UIFrameFadeIn
 --Hide the frame in the end.
---Shows the frame if it's hidden - important when touching protected frames.
+--Shows the frame if it's not protected - important when touching protected frames.
 --It also sets the alpha to "1" after hiding.
 
---frame: frame to fade in
+--frame: frame to fade in/out
 --duration:	time that takes the animation
 --startAlpha: starting alpha
 --endAlpha: ending alpha
@@ -65,4 +65,63 @@ function frameFade(frame, duration, startAlpha, endAlpha, hideEnd)
 		end	
 	end);
 	
+end
+
+function cancelFade(frame)
+	queueFrame[frame] = nil;
+end
+
+
+---UPDATED Blizzard tooltip func - used on CatchTheWind.xml
+function CTW_GameTooltip_ShowCompareItem(self, shift)
+	GameTooltip_ShowCompareItem(self,shift);
+
+	local shoppingTooltip1, shoppingTooltip2 = unpack(self.shoppingTooltips);
+	if(CatchTheWind:IsShown() and shoppingTooltip2:IsShown()) then
+		
+		local item, link = self:GetItem();
+		
+		local side = "left";
+		local rightDist = 0;
+		local leftPos = self:GetLeft();
+		local rightPos = self:GetRight();
+		if ( not rightPos ) then
+			rightPos = 0;
+		end
+		if ( not leftPos ) then
+			leftPos = 0;
+		end
+	
+		rightDist = GetScreenWidth() - rightPos;
+	
+		if (leftPos and (rightDist < leftPos)) then
+			side = "left";
+		else
+			side = "right";
+		end
+		
+		shoppingTooltip2:SetOwner(shoppingTooltip1, "ANCHOR_NONE");
+		shoppingTooltip2:ClearAllPoints();
+		if ( side and side == "left" ) then
+			shoppingTooltip2:SetPoint("TOPRIGHT", shoppingTooltip1, "TOPRIGHT", 0, shoppingTooltip1:GetHeight());
+		else
+			shoppingTooltip2:SetPoint("TOPLEFT", shoppingTooltip1, "TOPLEFT", 0, shoppingTooltip1:GetHeight());
+		end
+		shoppingTooltip2:SetHyperlinkCompareItem(link, 2, shift, self);
+		shoppingTooltip2:Show();
+	end
+	
+end
+
+function CTW_DressUpItemLink(link)
+	if ( not link or not IsDressableItem(link) ) then
+		return;
+	end
+	
+	if ( not CTWDressUpModel:IsShown() ) then
+		CTWDressUpModel:Show();
+		CTWDressUpModel:SetUnit("player");
+	end
+	
+	CTWDressUpModel:TryOn(link);
 end

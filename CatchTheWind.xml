@@ -34,14 +34,17 @@
 			<OnEnter>
 				GameTooltip:SetParent(CatchTheWind);
 				GameTooltip:SetFrameStrata("TOOLTIP");
-				for i=1,2 do
-					_G["ShoppingTooltip"..i]:SetParent(CatchTheWind);
-					_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
-				end
 				
 				GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 				GameTooltip:SetQuestItem(self.type, self:GetID());
-				GameTooltip_ShowCompareItem(GameTooltip);
+				
+				if(IsShiftKeyDown()) then
+					for i=1,2 do
+						_G["ShoppingTooltip"..i]:SetParent(CatchTheWind);
+						_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
+					end
+					CTW_GameTooltip_ShowCompareItem(GameTooltip);
+				end
 			</OnEnter>
 			
 			<OnLeave>
@@ -56,14 +59,78 @@
 			</OnLeave>
 			
 			<OnClick>
-				for i=1, GetNumQuestChoices() do
-					_G["CTWrewardPanelItem"..i.."IconTexture"]:SetVertexColor(0.35,0.35,0.35,1);
+				if ( IsModifiedClick("DRESSUP") ) then
+					CTW_DressUpItemLink(GetQuestItemLink(self.type, self:GetID()));
+				else
+					for i=1, GetNumQuestChoices() do
+						_G["CTWrewardPanelItem"..i.."IconTexture"]:SetVertexColor(0.35,0.35,0.35,1);
+					end
+					_G[self:GetName().."IconTexture"]:SetVertexColor(1,1,1,1);
+					QuestInfoItem_OnClick(self);
 				end
-				_G[self:GetName().."IconTexture"]:SetVertexColor(1,1,1,1);
-				QuestInfoItem_OnClick(self);
 			</OnClick>
 		</Scripts>
 		
 	</Button>
+
+
+	<!-- DressUpModel used to show rewards' look -->
+	<!-- TODO: Since most GUI is not in XML, in CatchTheWind.lua there are some "OnLoad" style calls in setUpLetterBox() function -->
+	<DressUpModel name="CTWDressUpModel" scale="2.0" inherits="ModelWithControlsTemplate" hidden="true">
+		<Size x="400" y="330"/>
+
+		<Scripts>
+			<OnLoad>
+				Model_OnLoad(self, MODELFRAME_MAX_PLAYER_ZOOM);
+			</OnLoad>
+		</Scripts>
+	</DressUpModel>
+	
+	
+	<!-- Frame that contains information about the addOn -->
+	<Frame name="CTWHelpFrame" hidden="true">
+		<Size x="320" y="150"/>
+		
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32"/>
+			</EdgeSize>
+		</Backdrop>
+		
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parentText" parentKey="text" justifyH="LEFT" inherits="GameFontNormal">
+					<Size x="290" y="140"/>
+					
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		
+		<Scripts>
+			<OnLoad>
+				self.text:SetText([[Help Frame:
+
+[A] and [D]- Moves between options
+[SPACE] - Skips text and clicks selected option
+[ESCAPE] - Stops quest interaction
+[F1] - Toggles Help Frame
+[F10] - Hide addOn
+[F12] - Takes a screenshot]])
+			</OnLoad>
+		</Scripts>
+	</Frame>
  
 </Ui>
