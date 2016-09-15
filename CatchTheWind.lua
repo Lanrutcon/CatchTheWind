@@ -1,9 +1,16 @@
 local Addon = CreateFrame("FRAME");
 
+local addonName, addonTable = ...;
+local L = addonTable["Locale"];
+
 --Main UI Frame
 local letterBox;
---Variable Quest Text Speed
+
+--Most Used SavedVariables
+--Quest Text Speed
 local factorTextSpeed = 1;
+--Quest Sound
+local questSoundEnabled = false;
 --Font to be used in QuestText
 local blizzardFont;
 
@@ -153,7 +160,9 @@ local function animateText(fontString)
 	local total, numChars, totalSfx = 0, 0, 0;
 	fontString:SetAlphaGradient(0,20);
 	isAnimating = true;
-	PlaySoundKitID(3093);
+	if(questSoundEnabled) then
+		PlaySoundKitID(3093);
+	end
 	animationFrame:SetScript("OnUpdate", function(self, elapsed)
 		total = total + elapsed;
 		totalSfx = totalSfx + elapsed;
@@ -168,7 +177,7 @@ local function animateText(fontString)
 				self:SetScript("OnUpdate", nil);
 			end
 		end
-		if(totalSfx > 1.4) then
+		if(questSoundEnabled and totalSfx > 1.4) then
 			totalSfx = 0;
 			PlaySoundKitID(3093);
 		end
@@ -243,6 +252,7 @@ local function hideLetterBox()
 	
 	end);
 	
+	--hides dressModel
 	CTWDressUpModel:Hide();
 	CTWHelpFrame:Hide();
 	local alpha = letterBox:GetAlpha();
@@ -354,7 +364,7 @@ local function createQuestRewardPanel()
 	letterBox.rewardPanel.title = letterBox.rewardPanel:CreateFontString();
 	letterBox.rewardPanel.title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE");
 	letterBox.rewardPanel.title:SetTextColor(1, 1, 1, 1);
-	letterBox.rewardPanel.title:SetText("Choose your reward");
+	letterBox.rewardPanel.title:SetText(L.CHOOSE_YOUR_REWARD);
 	letterBox.rewardPanel.title:SetPoint("TOP", 0, -12);
 	
 	--quest reward items buttons(blizz has 10 buttons)
@@ -375,9 +385,15 @@ end
 --
 -------------------------------------
 local function onClickKey(self)
+
+	--checks if it's the first paragraph, if yes, fades questTitle.
+	if(not isTextAnimating() and letterBox.questTitle:IsShown() and not isFrameFading(letterBox.questTitle)) then
+		frameFade(letterBox.questTitle, 0.5, 1, 0, true);
+	end
+	
 	if(not isTextAnimating() and (self.textIndex == #self.text or #self.text == 0)) then
 	
-		if(self.acceptButton.fontString:GetText() == "Continue") then
+		if(self.acceptButton.fontString:GetText() == L.CONTINUE) then
 			if(IsQuestCompletable()) then
 				self.acceptButton:Show();
 			else
@@ -387,7 +403,7 @@ local function onClickKey(self)
 			self.acceptButton:Show();
 		end
 
-		if(self.acceptButton.fontString:GetText() == "Thank you" and 
+		if(self.acceptButton.fontString:GetText() == L.THANK_YOU and 
 		self.textIndex == #self.text and GetNumQuestChoices() > 1 and
 		not self.rewardPanel:IsShown()) then
 			UIFrameFadeIn(self.rewardPanel, 0.5, 0, 1);
@@ -455,16 +471,22 @@ local function setUpLetterBox()
 	letterBox.topPanel:SetSize(screenWidth, screenHeight/7);
 	letterBox.topPanel:SetPoint("TOP");
 	
+	--QuestTitle
+	letterBox.questTitle = letterBox:CreateFontString(nil, "OVERLAY");
+	letterBox.questTitle:SetFont("Fonts\\MORPHEUS.ttf", 36, "OUTLINE");
+	letterBox.questTitle:SetTextColor(0.9, 0.9, 0.9, 1);
+	letterBox.questTitle:SetPoint("TOP", 0, -screenHeight/7-40);
 	
+	--QuestText
 	letterBox.questText = letterBox:CreateFontString(nil, "OVERLAY");
-	letterBox.questText:SetSize(screenWidth*0.75, screenHeight/7)
+	letterBox.questText:SetSize(screenWidth*0.75, screenHeight/7);
 	letterBox.questText:SetFont(blizzardFont, 16, "OUTLINE");
 	letterBox.questText:SetTextColor(0.9, 0.9, 0.9, 1);
 	letterBox.questText:SetPoint("BOTTOM", 0, 0);
 	
 	--fontString that shows the previous quest text, the previous line that the player read
 	letterBox.prevQuestText = letterBox:CreateFontString(nil, "OVERLAY");
-	letterBox.prevQuestText:SetSize(screenWidth*0.75, screenHeight/7)
+	letterBox.prevQuestText:SetSize(screenWidth*0.75, screenHeight/7);
 	letterBox.prevQuestText:SetFont(blizzardFont, 16, "OUTLINE");
 	letterBox.prevQuestText:SetTextColor(0.5, 0.5, 0.5, 1);
 	letterBox.prevQuestText:SetPoint("TOP", 0, 0);
@@ -489,6 +511,7 @@ local function setUpLetterBox()
 	
 	
 	letterBox:EnableMouse(true);
+	--set up script for mouse clicks
 	letterBox:SetScript("OnMouseUp", function(self, button)
 		onClickKey(self);
 	end);
@@ -552,6 +575,7 @@ local function loadSavedVariables()
 		CatchTheWindSV[UnitName("player")]["FactorTextSpeed"] = 1;
 	elseif(CatchTheWindSV[UnitName("player")]) then
 		factorTextSpeed = CatchTheWindSV[UnitName("player")]["FactorTextSpeed"];
+		questSoundEnabled = CatchTheWindSV[UnitName("player")]["QuestSoundEnabled"];
 	else
 		CatchTheWindSV[UnitName("player")] = {};
 		CatchTheWindSV[UnitName("player")]["FactorTextSpeed"] = 1;
@@ -625,12 +649,14 @@ local function onQuestDetail(questStartItemID)
 	
 	letterBox.text = GetQuestText();
 	
-	letterBox.acceptButton.fontString:SetText("Accept");
+	letterBox.acceptButton.fontString:SetText(L.ACCEPT);
 	letterBox.acceptButton:SetScript("OnMouseUp", QuestDetailAcceptButton_OnClick);
 	
-	letterBox.declineButton.fontString:SetText("Decline");
+	letterBox.declineButton.fontString:SetText(L.DECLINE);
 	letterBox.declineButton:SetScript("OnMouseUp", QuestDetailDeclineButton_OnClick);
 	
+	letterBox.questTitle:SetText(GetTitleText());
+	letterBox.questTitle:Show();
 	showLetterBox();
 	
 	startInteraction();
@@ -643,10 +669,13 @@ local function onQuestProgress()
 	
 	letterBox.text = GetProgressText();
 	
-	letterBox.acceptButton.fontString:SetText("Continue");
+	letterBox.acceptButton.fontString:SetText(L.CONTINUE);
 	letterBox.acceptButton:SetScript("OnMouseUp", QuestProgressCompleteButton_OnClick);
 	
-	letterBox.declineButton.fontString:SetText("Goodbye");
+	letterBox.declineButton.fontString:SetText(L.GOODBYE);
+	
+	letterBox.questTitle:SetText(GetTitleText());
+	letterBox.questTitle:Show();
 	
 	showLetterBox();
 	
@@ -658,6 +687,9 @@ local function onQuestComplete()
 	cancelTimer();
 	SetView(2);
 	if(not letterBox:IsShown()) then
+		letterBox.questTitle:SetText(GetTitleText());
+		letterBox.questTitle:Show();
+	
 		showLetterBox();
 	end
 	
@@ -665,7 +697,7 @@ local function onQuestComplete()
 	
 	startInteraction();
 	
-	letterBox.acceptButton.fontString:SetText("Thank you");
+	letterBox.acceptButton.fontString:SetText(L.THANK_YOU);
 	letterBox.acceptButton:SetScript("OnMouseUp", function(self, button)
 		if(QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1 ) then
 			UIFrameFlash(letterBox.rewardPanel, 0.5, 0.5, 1.5, true, 0, 0);
@@ -745,19 +777,24 @@ local function SlashCmd(cmd)
     		frameFade(CatchTheWindConfig, 0.25, 1, 0, true);
     	end
     elseif(cmd:match("fixCam")) then
-    	local total, reseting, i = 0, false, 1;
+    	local total, state, i = 0, 0, 1;
     	print("Please wait...");
 		timer:SetScript("OnUpdate", function(self, elapsed)
 			total = total + elapsed;
-			if(total > 1 and not reseting) then
-				SetView(i);
+			if(total > 1 and state == 0) then
+				total = 0;
+				print("Setting view #"..i);
+				blizz_SetView(i);
+				state = 1;
+			elseif(total > 1 and state == 1) then
+				total = 0;
 				print("Reseting view #"..i);
-				total = 0;
-				reseting = true;
 				ResetView(i);
-			elseif(total > 2 and reseting) then
+				state = 2;
+			elseif(total > 1 and state == 2) then
 				total = 0;
-				reseting = false;
+				state = 0;
+				print("Saving view #"..i);
 				SaveView(i);
 				i = i + 1;
 				if(i > 5) then
@@ -765,7 +802,6 @@ local function SlashCmd(cmd)
 					print("Work complete");
 				end
 			end
-		
 		end);
     else
     	printMessage("CatchTheWind Commands:");
@@ -801,8 +837,6 @@ Addon:SetScript("OnEvent", function(self, event, ...)
 		cancelTimer();
 	end
 end);
-
-
 
 
 Addon:RegisterEvent("PLAYER_LOGIN");

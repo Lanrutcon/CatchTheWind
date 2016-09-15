@@ -71,6 +71,9 @@ function cancelFade(frame)
 	queueFrame[frame] = nil;
 end
 
+function isFrameFading(frame)
+	return queueFrame[frame];
+end
 
 ---UPDATED Blizzard tooltip func - used on CatchTheWind.xml
 function CTW_GameTooltip_ShowCompareItem(self, shift)
@@ -100,6 +103,19 @@ function CTW_GameTooltip_ShowCompareItem(self, shift)
 			side = "right";
 		end
 		
+		--setting up shoppingTooltip1's position
+		shoppingTooltip1:SetOwner(self, "ANCHOR_NONE");
+		shoppingTooltip1:ClearAllPoints();
+		
+		if ( side and side == "left" ) then
+			shoppingTooltip1:SetPoint("TOPRIGHT", self, "TOPLEFT", 0, -10);
+		else
+			shoppingTooltip1:SetPoint("TOPLEFT", self, "TOPRIGHT", 0, -10);
+		end
+		shoppingTooltip1:SetHyperlinkCompareItem(link, 1, shift, self);
+		shoppingTooltip1:Show();
+		
+		--setting up shoppingTooltip2's position
 		shoppingTooltip2:SetOwner(shoppingTooltip1, "ANCHOR_NONE");
 		shoppingTooltip2:ClearAllPoints();
 		if ( side and side == "left" ) then

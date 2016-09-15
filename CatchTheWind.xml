@@ -29,6 +29,8 @@
 				_G[self:GetName().."IconTexture"]:SetSize(38,38);
 				_G[self:GetName().."IconTexture"]:ClearAllPoints();
 				_G[self:GetName().."IconTexture"]:SetPoint("CENTER", self, 0, 0);
+				
+				self.UpdateTooltip = self:GetScript("OnEnter");
 			</OnLoad>
 			
 			<OnEnter>

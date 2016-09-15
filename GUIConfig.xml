@@ -241,20 +241,7 @@
 						</Anchors>
 						
 						<Scripts>
-							<OnLoad>
-								self.text:SetText("Enable Camera Zooms");
-								self.tooltipText = "Camera zooms in/out when talking about quests.";
-
-								self.func = function(newValue)
-									CatchTheWindSV[UnitName("player")]["CameraEnabled"] = newValue;
-									if(newValue == nil) then
-										self:GetParent().saveView:Disable();
-										CatchTheWindSV[UnitName("player")]["SaveView"] = nil;
-									else
-										self:GetParent().saveView:Enable();
-									end
-								end
-							</OnLoad>
+							<OnLoad function="CatchTheWindConfigCameraMenuToggleCamera_OnLoad"/>
 						</Scripts>
 					</CheckButton>
 					
@@ -268,17 +255,36 @@
 						</Anchors>
 						
 						<Scripts>
-							<OnLoad>
-								self.text:SetText("Save your view");
-								self.tooltipText = "After interacting with a NPC, it zooms out to your view.\n\nWarning: This disables camera's ability to follow.\nAfter disable this, type: /ctw fixCam.";
-								
-								self.func = function(newValue)
-									CatchTheWindSV[UnitName("player")]["SaveView"] = newValue;
-								end
-							</OnLoad>
-
+							<OnLoad function="CatchTheWindConfigCameraMenuSaveView_OnLoad"/>
+							
 							<OnEnable>
 								if(CatchTheWindSV[UnitName("player")]["SaveView"]) then
+									self.text:SetTextColor(0.4, 1, 0.4);
+								else
+									self.text:SetTextColor(1, 0.4, 0.4);
+								end
+							</OnEnable>
+							
+							<OnDisable>
+								self.text:SetTextColor(0.2, 0.2, 0.2);
+							</OnDisable>
+						</Scripts>
+					</CheckButton>
+			
+					<CheckButton name="$parentCustomView" parentKey="customView" inherits="CatchTheWindConfigCheckButtonTemplate">
+						<Anchors>
+							<Anchor point="TOP">
+								<Offset>
+									<AbsDimension x="0" y="-64"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						
+						<Scripts>
+							<OnLoad function="CatchTheWindConfigCameraMenuCustomView_OnLoad"/>
+						
+							<OnEnable>
+								if(CatchTheWindSV[UnitName("player")]["CustomView"]) then
 									self.text:SetTextColor(0.4, 1, 0.4);
 								else
 									self.text:SetTextColor(1, 0.4, 0.4);
@@ -308,14 +314,7 @@
 						</Anchors>
 						
 						<Scripts>
-							<OnLoad>
-								self.text:SetText("Show previous text");
-								self.tooltipText = "After going to the next paragraph, the previous one will be shown at the top.";
-
-								self.func = function(newValue)
-									CatchTheWindSV[UnitName("player")]["ShowPreviousText"] = newValue;
-								end
-							</OnLoad>
+							<OnLoad function="CatchTheWindConfigQuestMenuPreviousText_OnLoad"/>
 						</Scripts>
 					</CheckButton>
 					
@@ -329,14 +328,8 @@
 						</Anchors>
 						
 						<Scripts>
-							<OnLoad>
-								self.text:SetText("Change Text Speed");
-								self.tooltipText = "Changes quest text speed when interacting with a NPC about a quest.";
-								self.tooltipRequirement = "Current factor of text speed: %g";
-								
-								self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
-							</OnLoad>
-							
+							<OnLoad function="CatchTheWindConfigQuestMenuTextSpeed_OnLoad"/>
+						
 							<OnClick>
 								local newValue = CatchTheWindSV[UnitName("player")]["FactorTextSpeed"];
 
@@ -355,18 +348,40 @@
 							</OnClick>
 						</Scripts>
 					</Button>
+					
+					<CheckButton name="$parentQuestSound" parentKey="questSound" inherits="CatchTheWindConfigCheckButtonTemplate">
+						<Anchors>
+							<Anchor point="TOP">
+								<Offset>
+									<AbsDimension x="0" y="-64"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						
+						<Scripts>
+							<OnLoad function="CatchTheWindConfigQuestMenuQuestSound_OnLoad"/>
+						</Scripts>
+					</CheckButton>
 				</Frames>
 				
 				
 				<Scripts>
 					<OnShow>
-						<!-- Update Values -->
+						<!-- Setting Values -->
 						local sv = CatchTheWindSV[UnitName("player")];
+						
 						self.previousText:SetChecked(sv["ShowPreviousText"]);
 						if(sv["ShowPreviousText"]) then
 							self.previousText.text:SetTextColor(0.4, 1, 0.4);
 						else
 							self.previousText.text:SetTextColor(1, 0.4, 0.4);
+						end
+						
+						self.questSound:SetChecked(sv["QuestSoundEnabled"]);
+						if(sv["QuestSoundEnabled"]) then
+							self.questSound.text:SetTextColor(0.4, 1, 0.4);
+						else
+							self.questSound.text:SetTextColor(1, 0.4, 0.4);
 						end
 						
 						self.textSpeed.value = CatchTheWindSV[UnitName("player")]["FactorTextSpeed"];
@@ -401,17 +416,7 @@
 		</Frames>
 	
 		<Scripts>
-			<OnLoad>
-				self.cameraMenuButton.text:SetText("Camera");
-				self.questMenuButton.text:SetText("Quest");
-				self.creditsMenuButton.text:SetText("Credits");
-				
-				self.menuButtonsTable = {
-					self.cameraMenuButton,
-					self.questMenuButton,
-					self.creditsMenuButton,
-				}
-			</OnLoad>
+			<OnLoad function="CatchTheWindConfig_OnLoad"/>
 			
 			<OnShow>
 				CatchTheWindConfig_OnShow();
