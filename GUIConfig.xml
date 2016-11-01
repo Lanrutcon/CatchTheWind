@@ -1,0 +1,428 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+
+	<!-- Loading GUIConfig.lua -->
+	<Script file="GUIConfig.lua"/>
+	
+	<!-- TEMPLATES -->
+
+	<Font name="CatchTheWindConfigButtonFont" font="Fonts\FRIZQT__.TTF" outline="NORMAL" virtual="true">
+		<FontHeight>
+			<AbsValue val="28"/>
+		</FontHeight>
+	</Font>
+	
+	<Font name="CatchTheWindConfigButtonFontSmall" font="Fonts\FRIZQT__.TTF" outline="NORMAL" virtual="true">
+		<FontHeight>
+			<AbsValue val="20"/>
+		</FontHeight>
+	</Font>
+
+	<Font name="CatchTheWindConfigCreditsFont" font="Fonts\FRIZQT__.TTF" outline="NORMAL" virtual="true">
+		<FontHeight>
+			<AbsValue val="14"/>
+		</FontHeight>
+	</Font>
+	
+	<!-- Section buttons, similar to tab buttons-->
+	<Button name="CatchTheWindConfigMenuButtonTemplate" virtual="true">
+		<Size x="128" y="40"/>
+			
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parentText" parentKey="text" inherits="CatchTheWindConfigButtonFont">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		
+		<Scripts>
+		
+			<OnLoad>
+				self.text:SetTextColor(0.35,0.35,0.35);
+			</OnLoad>
+	
+			<OnClick>
+				CatchTheWindConfigMenuButton_OnClick(self, button);
+			</OnClick>
+			<OnEnter>
+				if ( self:IsEnabled() ) then
+					self.text:SetTextColor(0.65,0.65,0.65);
+				end
+			</OnEnter>
+			<OnLeave>
+				if ( self:IsEnabled() ) then
+					self.text:SetTextColor(0.35,0.35,0.35);
+				end
+			</OnLeave>
+			
+			<OnEnable>
+				self.text:SetTextColor(0.35,0.35,0.35);
+			</OnEnable>
+			
+			<OnDisable>
+				self.text:SetTextColor(0.85,0.85,0.85);
+			</OnDisable>
+		
+		</Scripts>
+
+	</Button>
+
+	<CheckButton name="CatchTheWindConfigCheckButtonTemplate" virtual="true">
+		<Size x="128" y="40"/>
+	
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parentText" parentKey="text" inherits="CatchTheWindConfigButtonFontSmall">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	
+		<Scripts>
+	
+			<OnClick>
+				CatchTheWindConfigCheckButton_OnClick(self, button);
+			</OnClick>
+			
+			<OnEnter>
+				if ( self.tooltipText ) then
+					GameTooltip:SetOwner(self, self.tooltipOwnerPoint or "ANCHOR_RIGHT");
+					GameTooltip:SetText(self.tooltipText, nil, nil, nil, nil, 1);
+				end
+				if ( self.tooltipRequirement ) then
+					GameTooltip:AddLine(self.tooltipRequirement, 1.0, 1.0, 1.0, 1.0);
+					GameTooltip:Show();
+				end
+			</OnEnter>
+			
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+		
+		</Scripts>
+	
+	</CheckButton>
+	
+	<Button name="CatchTheWindConfigButtonTemplate" virtual="true">
+		<Size x="128" y="40"/>
+	
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parentText" parentKey="text" inherits="CatchTheWindConfigButtonFontSmall">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	
+		<Scripts>
+			
+			<OnEnter>
+				if ( self.tooltipText ) then
+					GameTooltip:SetOwner(self, self.tooltipOwnerPoint or "ANCHOR_RIGHT");
+					GameTooltip:SetText(self.tooltipText, nil, nil, nil, nil, 1);
+				end
+				if ( self.tooltipRequirement ) then
+					GameTooltip:AddLine(string.format(self.tooltipRequirement, self.value), 1.0, 1.0, 1.0, 1.0);
+					GameTooltip:Show();
+				end
+			</OnEnter>
+			
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+		
+		</Scripts>
+	</Button>
+
+	<!-- END TEMPLATES -->
+	
+	
+	<Frame name="CatchTheWindConfig" hidden="true">
+		<Size x="512" y="512"/>
+		
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBackground" parentKey="background" file="Interface\AddOns\CatchTheWind\Textures\config.blp">
+					<Size x="512" y="512"/>
+					
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<!-- Menu Buttons -->
+			<Button name="CatchTheWindConfigCameraMenuButton" parentKey="cameraMenuButton" inherits="CatchTheWindConfigMenuButtonTemplate">
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="-128" y="90"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				
+				<Scripts>
+					<OnLoad>
+						self.text:SetTextColor(0.35,0.35,0.35);
+						self.func = function()
+							CatchTheWindConfigCameraMenu:Show();
+							CatchTheWindConfigQuestMenu:Hide();
+							CatchTheWindConfigCreditsMenu:Hide();
+						end
+					</OnLoad>
+				</Scripts>
+			</Button>
+			
+			<Button name="CatchTheWindConfigQuestMenuButton" parentKey="questMenuButton" inherits="CatchTheWindConfigMenuButtonTemplate">
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="0" y="90"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				
+				<Scripts>
+					<OnLoad>
+						self.text:SetTextColor(0.35,0.35,0.35);
+						self.func = function()
+							CatchTheWindConfigCameraMenu:Hide();
+							CatchTheWindConfigQuestMenu:Show();
+							CatchTheWindConfigCreditsMenu:Hide();
+						end
+					</OnLoad>
+				</Scripts>
+			</Button>
+			
+			<Button name="CatchTheWindConfigCreditsMenuButton" parentKey="creditsMenuButton" inherits="CatchTheWindConfigMenuButtonTemplate">
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="128" y="90"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				
+				<Scripts>
+					<OnLoad>
+						self.text:SetTextColor(0.35,0.35,0.35);
+						self.func = function()
+							CatchTheWindConfigCameraMenu:Hide();
+							CatchTheWindConfigQuestMenu:Hide();
+							CatchTheWindConfigCreditsMenu:Show();
+						end
+					</OnLoad>
+				</Scripts>
+			</Button>
+		
+			<!-- Menu Frames -->
+			<Frame name="$parentCameraMenu" parentKey="cameraMenu">
+				<Size x="512" y="300"/>
+				
+				<Anchors>
+					<Anchor point="BOTTOM"/>
+				</Anchors>
+				
+				<Frames>
+					<CheckButton name="$parentToggleCamera" parentKey="toggleCamera" inherits="CatchTheWindConfigCheckButtonTemplate">
+						<Anchors>
+							<Anchor point="TOP"/>
+						</Anchors>
+						
+						<Scripts>
+							<OnLoad function="CatchTheWindConfigCameraMenuToggleCamera_OnLoad"/>
+						</Scripts>
+					</CheckButton>
+					
+					<CheckButton name="$parentSaveView" parentKey="saveView" inherits="CatchTheWindConfigCheckButtonTemplate">
+						<Anchors>
+							<Anchor point="TOP">
+								<Offset>
+									<AbsDimension x="0" y="-32"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						
+						<Scripts>
+							<OnLoad function="CatchTheWindConfigCameraMenuSaveView_OnLoad"/>
+
+							<OnEnable>
+								if(CatchTheWindSV[UnitName("player")]["SaveView"]) then
+									self.text:SetTextColor(0.4, 1, 0.4);
+								else
+									self.text:SetTextColor(1, 0.4, 0.4);
+								end
+							</OnEnable>
+							
+							<OnDisable>
+								self.text:SetTextColor(0.2, 0.2, 0.2);
+							</OnDisable>
+						</Scripts>
+					</CheckButton>
+				
+					<CheckButton name="$parentCustomView" parentKey="customView" inherits="CatchTheWindConfigCheckButtonTemplate">
+						<Anchors>
+							<Anchor point="TOP">
+								<Offset>
+									<AbsDimension x="0" y="-64"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						
+						<Scripts>
+							<OnLoad function="CatchTheWindConfigCameraMenuCustomView_OnLoad"/>
+						
+							<OnEnable>
+								if(CatchTheWindSV[UnitName("player")]["CustomView"]) then
+									self.text:SetTextColor(0.4, 1, 0.4);
+								else
+									self.text:SetTextColor(1, 0.4, 0.4);
+								end
+							</OnEnable>
+							
+							<OnDisable>
+								self.text:SetTextColor(0.2, 0.2, 0.2);
+							</OnDisable>
+						</Scripts>
+					</CheckButton>
+				</Frames>
+		
+			</Frame>
+			
+			<Frame name="$parentQuestMenu" parentKey="questMenu">
+				<Size x="512" y="300"/>
+				
+				<Anchors>
+					<Anchor point="BOTTOM"/>
+				</Anchors>
+				
+				<Frames>
+					<CheckButton name="$parentPreviousText" parentKey="previousText" inherits="CatchTheWindConfigCheckButtonTemplate">
+						<Anchors>
+							<Anchor point="TOP"/>
+						</Anchors>
+						
+						<Scripts>
+							<OnLoad function="CatchTheWindConfigQuestMenuPreviousText_OnLoad"/>
+						</Scripts>
+					</CheckButton>
+					
+					<Button name="$parentTextSpeed" parentKey="textSpeed" inherits="CatchTheWindConfigButtonTemplate">
+						<Anchors>
+							<Anchor point="TOP">
+								<Offset>
+									<AbsDimension x="0" y="-32"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						
+						<Scripts>
+							<OnLoad function="CatchTheWindConfigQuestMenuTextSpeed_OnLoad"/>
+							
+							<OnClick>
+								local newValue = CatchTheWindSV[UnitName("player")]["FactorTextSpeed"];
+
+								if(button == "LeftButton" and 4.9 > newValue ) then
+									newValue = newValue + 0.1;
+								elseif(button == "RightButton" and newValue > 0.51) then
+									newValue = newValue - 0.1;
+								end
+								
+								self.value = newValue;
+								
+								<!-- Update Tooltip -->
+								self:GetScript("OnEnter")(self);
+								
+								CatchTheWindSV[UnitName("player")]["FactorTextSpeed"] = newValue;
+							</OnClick>
+						</Scripts>
+					</Button>
+					
+					<CheckButton name="$parentQuestSound" parentKey="questSound" inherits="CatchTheWindConfigCheckButtonTemplate">
+						<Anchors>
+							<Anchor point="TOP">
+								<Offset>
+									<AbsDimension x="0" y="-64"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						
+						<Scripts>
+							<OnLoad function="CatchTheWindConfigQuestMenuQuestSound_OnLoad"/>
+						</Scripts>
+					</CheckButton>
+				</Frames>
+				
+				
+				<Scripts>
+					<OnShow>
+						<!-- Setting Values -->
+						local sv = CatchTheWindSV[UnitName("player")];
+						
+						self.previousText:SetChecked(sv["ShowPreviousText"]);
+						if(sv["ShowPreviousText"]) then
+							self.previousText.text:SetTextColor(0.4, 1, 0.4);
+						else
+							self.previousText.text:SetTextColor(1, 0.4, 0.4);
+						end
+						
+						self.questSound:SetChecked(sv["QuestSoundEnabled"]);
+						if(sv["QuestSoundEnabled"]) then
+							self.questSound.text:SetTextColor(0.4, 1, 0.4);
+						else
+							self.questSound.text:SetTextColor(1, 0.4, 0.4);
+						end
+						
+						self.textSpeed.value = CatchTheWindSV[UnitName("player")]["FactorTextSpeed"];
+					</OnShow>
+				
+				</Scripts>
+			</Frame>
+
+			<Frame name="$parentCreditsMenu" parentKey="creditsMenu">
+				<Size x="512" y="300"/>
+				
+				<Anchors>
+					<Anchor point="BOTTOM"/>
+				</Anchors>
+				
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentCreditsText" parentKey="creditsText" inherits="CatchTheWindConfigCreditsFont">
+							<Size x="350" y="128"/>
+							<Anchors>
+								<Anchor point="TOP"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				
+				<Scripts>
+					<OnLoad function="CatchTheWindConfigCreditsMenu_OnLoad"/>
+				</Scripts>
+			</Frame>				
+		
+		</Frames>
+	
+		<Scripts>
+			<OnLoad function="CatchTheWindConfig_OnLoad"/>
+			
+			<OnShow>
+				CatchTheWindConfig_OnShow();
+			</OnShow>
+		</Scripts>
+	
+	</Frame>
+
+</Ui>
