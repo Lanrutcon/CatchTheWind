@@ -152,7 +152,11 @@ local creditsText =
 |cffff9966Quest Reward Panel|r suggested by |cff6699ffKrainz|r
 |cffff9966Previous Quest Text|r suggested by |cff6699ffMattOzone|r
 |cffff9966Modifier NPC Interaction|r suggested by |cff6699ffihithim|r
-|cffff9966Quest Sound|r suggested by |cff6699ffbenoitheylens|r]];
+|cffff9966Quest Sound|r suggested by |cff6699ffRaffiq|r
+
+|cffff9966French translation|r made by |cff6699ffRaffiq|r
+
+|cff99ff66Special Thanks|r to |cff6699ffJV|r]];
 
 
 function CatchTheWindConfigCreditsMenu_OnLoad(self)

@@ -1,5 +1,51 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
 
+	<Frame name="CatchTheWind" frameStrata="FULLSCREEN_DIALOG" hidden="true">
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="CTWBottomPanel" parentKey="bottomPanel">
+					<Anchors>
+						  <Anchor point="BOTTOM"/>
+					</Anchors>
+					<Color r="0" g="0" b="0"/>
+				</Texture>
+				<Texture name="CTWTopPanel" parentKey="topPanel">
+					<Anchors>
+						  <Anchor point="TOP"/>
+					</Anchors>
+					<Color r="0" g="0" b="0"/>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString parentKey="questText">
+					<Anchors>
+						<Anchor point="BOTTOM"/>
+					</Anchors>
+					<Color r="0.9" g="0.9" b="0.9"/>
+				</FontString>
+				<FontString parentKey="prevQuestText">
+					<Anchors>
+						<Anchor point="TOP"/>
+					</Anchors>
+					<Color r="0.5" g="0.5" b="0.5"/>
+				</FontString>
+			</Layer>
+		</Layers>
+
+		<Frames>
+			<DressUpModel name="CTWDressUpModel" scale="2.0" inherits="ModelWithControlsTemplate" hidden="true">
+				<Size x="400" y="330"/>
+				<Anchors>
+					<Anchor point="LEFT" x="100" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						Model_OnLoad(self, MODELFRAME_MAX_PLAYER_ZOOM);
+					</OnLoad>
+				</Scripts>
+			</DressUpModel>
+		</Frames>
+	</Frame>
 	<!--QuestItem Button Template -->
 	<Button name="CTWItemButtonTemplate" hidden="true" inherits="LargeItemButtonTemplate, QuestInfoRewardItemCodeTemplate" virtual="true">
 	
@@ -65,7 +111,7 @@
 					CTW_DressUpItemLink(GetQuestItemLink(self.type, self:GetID()));
 				else
 					for i=1, GetNumQuestChoices() do
-						_G["CTWrewardPanelItem"..i.."IconTexture"]:SetVertexColor(0.35,0.35,0.35,1);
+						_G["CTWChoicePanelItem"..i.."IconTexture"]:SetVertexColor(0.35,0.35,0.35,1);
 					end
 					_G[self:GetName().."IconTexture"]:SetVertexColor(1,1,1,1);
 					QuestInfoItem_OnClick(self);
@@ -78,19 +124,10 @@
 
 	<!-- DressUpModel used to show rewards' look -->
 	<!-- TODO: Since most GUI is not in XML, in CatchTheWind.lua there are some "OnLoad" style calls in setUpLetterBox() function -->
-	<DressUpModel name="CTWDressUpModel" scale="2.0" inherits="ModelWithControlsTemplate" hidden="true">
-		<Size x="400" y="330"/>
-
-		<Scripts>
-			<OnLoad>
-				Model_OnLoad(self, MODELFRAME_MAX_PLAYER_ZOOM);
-			</OnLoad>
-		</Scripts>
-	</DressUpModel>
 	
 	
 	<!-- Frame that contains information about the addOn -->
-	<Frame name="CTWHelpFrame" hidden="true">
+	<Frame name="CTWHelpFrame" parent="CatchTheWind" hidden="true">
 		<Size x="320" y="150"/>
 		
 		<Anchors>
@@ -135,4 +172,227 @@
 		</Scripts>
 	</Frame>
  
+	<!-- Copy/Pasted from LevelUpDisplay.xml -->
+	<Frame name="CTWQuestTitleFrame" parent="CatchTheWind" hidden="true">
+		<Animations>
+			<AnimationGroup parentKey="showAnim">
+				<Alpha fromAlpha="0" toAlpha="1" startDelay="0.5" duration="1.0" order="1"/>
+				<Scripts>
+					<OnFinished>
+						self:GetParent():SetAlpha(1);
+					</OnFinished>
+				</Scripts>
+			</AnimationGroup>
+			<AnimationGroup parentKey="hideAnim">
+				<Alpha fromAlpha="1" toAlpha="0" duration="1.0" order="1"/>
+				<Scripts>
+					<OnFinished>
+						CTWQuestTitleFrame:Hide();
+					</OnFinished>
+				</Scripts>
+			</AnimationGroup>
+		</Animations>
+		<Size x="418" y="72"/>
+		<Anchors>
+			<Anchor point="TOP" x="0" y="-150"/>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture file="Interface\LevelUp\LevelUpTex" name="$parentBlackBg">
+					<Animations>
+						<AnimationGroup parentKey="grow">
+							<Scale scaleX="1.0" scaleY="0.001" duration="0.0" startDelay="0.5" order="1">
+								 <Origin point="BOTTOM">
+									<Offset x="0" y="0"/>
+								 </Origin>
+							</Scale>
+							<Scale scaleX="1.0" scaleY="1000.0" duration="0.15" startDelay="0.25" order="2">
+								 <Origin point="BOTTOM">
+									<Offset x="0" y="0"/>
+								 </Origin>
+							</Scale>
+						</AnimationGroup>
+					</Animations>
+					<Anchors>
+						<Anchor point="BOTTOM" x="0" y="0"/>
+					</Anchors>
+					<Size x="326" y="103"/>
+					<TexCoords left="0.00195313" right="0.63867188" top="0.03710938" bottom="0.23828125"/>
+					<Color r="1.0" g="1.0" b="1.0" a="0.6"/>
+				</Texture>
+			</Layer>
+			<Layer level="BACKGROUND" textureSubLevel="2">
+				<Texture file="Interface\LevelUp\LevelUpTex" name="$parentGLine2" parentKey="gLine2">
+					<Animations>
+						<AnimationGroup parentKey="grow">
+							<Scale scaleX="0.001" scaleY="1.0" duration="0.0" startDelay="0.5" order="1"/>
+							<Scale scaleX="1000.0" scaleY="1.0" duration="0.5" order="2"/>
+							<Scripts>
+								<OnPlay>
+									CTWQuestTitleFrameBlackBg.grow:Play();
+								</OnPlay>
+							</Scripts>
+						</AnimationGroup>
+					</Animations>
+					<Anchors>
+						<Anchor point="TOP" x="0" y="0"/>
+					</Anchors>
+					<Size x="418" y="7"/>
+				</Texture>
+				<Texture file="Interface\LevelUp\LevelUpTex" name="$parentGLine" parentKey="gLine">
+					<Anchors>
+						<Anchor point="BOTTOM" x="0" y="0"/>
+					</Anchors>
+					<Size x="418" y="7"/>
+					<Animations>
+						<AnimationGroup parentKey="grow">
+							<Scale scaleX="0.001" scaleY="1.0" duration="0.0" startDelay="0.5" order="1"/>
+							<Scale scaleX="1000.0" scaleY="1.0" duration="0.5" order="2"/>
+							<Scripts>
+								<OnPlay>
+									CTWQuestTitleFrameGLine2.grow:Play();
+									CTWQuestTitleFrameBlackBg.grow:Play();
+								</OnPlay>
+							</Scripts>
+						</AnimationGroup>
+					</Animations>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame name="$parentLevelFrame" parentKey="levelFrame" alpha="1">
+				<Animations>
+					<AnimationGroup parentKey="levelUp">
+						<Alpha fromAlpha="0" toAlpha="1" duration="0.7" startDelay="0.5" order="1"/>
+						<Scripts>
+							<OnPlay>
+								CTWQuestTitleFrameGLine.grow:Play();
+							</OnPlay>
+							<OnFinished>
+								self:GetParent():SetAlpha(1);
+							</OnFinished>
+						</Scripts>
+					</AnimationGroup>
+				</Animations>
+				<Size x="418" y="72"/>
+				<Anchors>
+					<Anchor point="TOPLEFT"/>
+					<Anchor point="BOTTOMRIGHT"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentText" justifyH="CENTER" parentKey="questText">
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+							<Color r="1.0" g="0.82" b="0"/>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						  self.questText:SetFont(QuestTitleFont:GetFont(), 32, "OUTLINE");
+					</OnLoad>
+				</Scripts>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnShow>
+				self:SetAlpha(0);
+				self.gLine:SetTexCoord(0.00195313, 0.81835938, 0.0, 0.01953125);
+				self.gLine2:SetTexCoord(0.00195313, 0.81835938, 0.0, 0.01953125);
+
+				self.levelFrame.questText:SetTextColor(0.9, 0.9, 0.9);
+
+				self.levelFrame.levelUp:Play();
+				if self.hideAnim:IsPlaying() then
+					self.hideAnim:Stop()
+				end
+				self.showAnim:Play();
+			</OnShow>
+
+			<OnHide>
+				self.levelFrame.levelUp:Stop();
+				CTWQuestTitleFrameBlackBg.grow:Stop();
+				CTWQuestTitleFrameGLine2.grow:Stop();
+				CTWQuestTitleFrameGLine.grow:Stop();
+			</OnHide>
+		</Scripts>
+	</Frame>
+
+	<!-- This is the panel that shows the rewards that you can choose from -->
+	<Frame name="CTWChoicePanel" parent="CatchTheWind" parentKey="choicePanel" hidden="true">
+		<Size x="600" y="100"/>
+		<Anchors>
+			<Anchor point="TOP" relativeTo="CTWBottomPanel" x="0" y="100"/>
+		</Anchors>
+
+		<Layers>
+			<Layer level="BACKGROUND">
+				<!-- Plain Rectangle -->
+				<Texture parentKey="textureCenter">
+					<Size x="200" y="100"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+					<Color r="0" g="0" b="0" a="0.9"/>
+				</Texture>
+				<!-- Left Rectangle from 0 to 0.9 alpha -->
+				<Texture parentKey="textureLeft">
+					<Size x="200" y="100"/>
+					<Anchors>
+						<Anchor point="LEFT"/>
+					</Anchors>
+					<Color r="0" g="0" b="0"/>
+				</Texture>
+				<!-- Right Rectangle from 0.9 to 0.0 alpha -->
+				<Texture parentKey="textureRight">
+					<Size x="200" y="100"/>
+					<Anchors>
+						<Anchor point="RIGHT"/>
+					</Anchors>
+					<Color r="0" g="0" b="0"/>
+				</Texture>
+			</Layer>
+
+			<Layer level="ARTWORK">
+				<FontString parentKey="title">
+					<Anchors>
+						<Anchor point="TOP" x="0" y="-12"/>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1"/>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+
+	<!-- This is the panel that shows the rewards that you will receive (i.e. no need to choose) -->
+	<Frame name="CTWRewardPanel" parent="CatchTheWind" parentKey="rewardPanel" hidden="true">
+		<Size x="150" y="150"/>
+		<Anchors>
+			<Anchor point="RIGHT"/>
+		</Anchors>
+
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="background">
+					<Color r="0" g="0" b="0" a="1"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString parentKey="title">
+					<Anchors>
+						<Anchor point="TOP" x="-20" y="-12"/>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="1"/>
+				</FontString>
+			</Layer>
+		</Layers>
+
+		<Scripts>
+			<OnLoad>
+				self.background:SetGradientAlpha("HORIZONTAL", 0, 0, 0, 0, 0, 0, 0, 0.9);
+			</OnLoad>
+		</Scripts>
+	</Frame>
 </Ui>

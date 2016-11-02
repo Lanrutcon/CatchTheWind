@@ -112,18 +112,12 @@ function CTW_GameTooltip_ShowCompareItem(self, shift)
 		else
 			shoppingTooltip1:SetPoint("TOPLEFT", self, "TOPRIGHT", 0, -10);
 		end
-		shoppingTooltip1:SetCompareItem(link, 1, shift, self);
+		shoppingTooltip1:SetHyperlinkCompareItem(link, 1, shift, self);
 		shoppingTooltip1:Show();
 		
 		--setting up shoppingTooltip2's position
-		shoppingTooltip2:SetOwner(shoppingTooltip1, "ANCHOR_NONE");
-		shoppingTooltip2:ClearAllPoints();
-		if ( side and side == "left" ) then
-			shoppingTooltip2:SetPoint("TOPRIGHT", shoppingTooltip1, "TOPRIGHT", 0, shoppingTooltip1:GetHeight());
-		else
-			shoppingTooltip2:SetPoint("TOPLEFT", shoppingTooltip1, "TOPLEFT", 0, shoppingTooltip1:GetHeight());
-		end
-		shoppingTooltip2:SetCompareItem(link, 2, shift, self);
+		shoppingTooltip2:SetOwner(shoppingTooltip1, "ANCHOR_TOP");
+		shoppingTooltip2:SetHyperlinkCompareItem(link, 2, shift, self);
 		shoppingTooltip2:Show();
 	end
 	

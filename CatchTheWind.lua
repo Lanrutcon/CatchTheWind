@@ -98,7 +98,7 @@ local function splitText(text)
 		if not (strtrim(nextLine) == "") then
 			table.insert(tableLines, nextLine);
 		end
-		text = string.sub(text, string.find(text, "\n")+1, -1);	
+		text = string.sub(text, string.find(text, "\n")+1, -1);
 	end
 	if not (strtrim(text) == "") then
 		table.insert(tableLines, string.sub(text, 0, string.find(text, "\n")));
@@ -123,7 +123,7 @@ local function createButton(name, parent, text, onClickFunc)
 	buttonFrame:SetSize(200,50);
 	
 	buttonFrame.fontString = buttonFrame:CreateFontString();
-	buttonFrame.fontString:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE");
+	buttonFrame.fontString:SetFont(blizzardFont, 18, "OUTLINE");
 	buttonFrame.fontString:SetText(text);
 	buttonFrame.fontString:SetTextColor(0.45, 0.45, 0.45, 1);
 	buttonFrame.fontString:SetPoint("CENTER");
@@ -313,6 +313,7 @@ local function startInteraction()
 	letterBox.acceptButton:Hide();
 	letterBox.declineButton:Hide();
 	
+	letterBox.choicePanel:Hide();
 	letterBox.rewardPanel:Hide();
 	
 	letterBox.text = splitText(letterBox.text);
@@ -332,51 +333,29 @@ end
 -- Used in "setUpLetterBox" function.
 --
 -------------------------------------
-local function createQuestRewardPanel()
-
-	--quest reward panel
-	letterBox.rewardPanel = CreateFrame("FRAME", "CTWrewardPanel", letterBox);
-	local rewardPanel = letterBox.rewardPanel;	--referencing to smaller name
-	rewardPanel:SetSize(600,100);
-	rewardPanel:SetPoint("TOP", letterBox.bottomPanel, 0, 100);
-	
-	--creating background textures (some a gradient that fades in and out)
-	rewardPanel.textureCenter = rewardPanel:CreateTexture(nil, "BACKGROUND");
-	rewardPanel.textureCenter:SetSize(200,100);
-	rewardPanel.textureCenter:SetColorTexture(0,0,0);
-	rewardPanel.textureCenter:SetAlpha(0.9);
-	rewardPanel.textureCenter:SetPoint("CENTER");
-	
-	rewardPanel.textureLeft = rewardPanel:CreateTexture(nil, "BACKGROUND");
-	rewardPanel.textureLeft:SetSize(200,100);
-	rewardPanel.textureLeft:SetColorTexture(0,0,0);
-	rewardPanel.textureLeft:SetGradientAlpha("HORIZONTAL", 0, 0, 0, 0, 0, 0, 0, 0.9);
-	rewardPanel.textureLeft:SetPoint("LEFT");
-	
-	rewardPanel.textureRight = rewardPanel:CreateTexture(nil, "BACKGROUND");
-	rewardPanel.textureRight:SetSize(200,100);
-	rewardPanel.textureRight:SetColorTexture(0,0,0);
-	rewardPanel.textureRight:SetGradientAlpha("HORIZONTAL", 0, 0, 0, 0.9, 0, 0, 0, 0);
-	rewardPanel.textureRight:SetPoint("RIGHT");
-	
-	
-	--quest reward panel title
-	letterBox.rewardPanel.title = letterBox.rewardPanel:CreateFontString();
-	letterBox.rewardPanel.title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE");
-	letterBox.rewardPanel.title:SetTextColor(1, 1, 1, 1);
-	letterBox.rewardPanel.title:SetText(L.CHOOSE_YOUR_REWARD);
-	letterBox.rewardPanel.title:SetPoint("TOP", 0, -12);
-	
-	--quest reward items buttons(blizz has 10 buttons)
-	--refactor > extract code
+local function setUpQuestChoicePanel()
+	CTWChoicePanel.textureLeft:SetGradientAlpha("HORIZONTAL", 0, 0, 0, 0, 0, 0, 0, 0.9);
+	CTWChoicePanel.textureRight:SetGradientAlpha("HORIZONTAL", 0, 0, 0, 0.9, 0, 0, 0, 0);
+	CTWChoicePanel.title:SetFont(blizzardFont, 18, "OUTLINE");
+	CTWChoicePanel.title:SetText(L.CHOOSE_YOUR_REWARD);
 	
 	for i=1, 10 do
 		CreateFrame("BUTTON", "CTWrewardPanelItem"..i, letterBox.rewardPanel, "CTWItemButtonTemplate");
 	end
 	
-	letterBox.rewardPanel:Hide();
 end
 
+
+local function setUpQuestRewardPanel()
+	--creating 5 buttons for rewards (Blizzard uses 10 for choices+rewards) - already made 10 in QuestChoicePanel
+	CTWRewardPanel.title:SetFont(blizzardFont, 18, "OUTLINE");
+	CTWRewardPanel.title:SetText(REWARD_ITEMS_ONLY);
+
+	for i=1, 5 do
+		local btn = CreateFrame("BUTTON", "CTWRewardPanelItem"..i, CTWRewardPanel, "CTWItemButtonTemplate");
+		btn.type = "reward";
+	end
+end
 
 -------------------------------------
 --
@@ -387,8 +366,8 @@ end
 local function onClickKey(self)
 
 	--checks if it's the first paragraph, if yes, fades questTitle.
-	if(not isTextAnimating() and letterBox.questTitle:IsShown() and not isFrameFading(letterBox.questTitle)) then
-		frameFade(letterBox.questTitle, 0.5, 1, 0, true);
+	if(not isTextAnimating() and CTWQuestTitleFrame:IsShown() and not CTWQuestTitleFrame.hideAnim:IsPlaying()) then
+		CTWQuestTitleFrame.hideAnim:Play();
 	end
 	
 	if(not isTextAnimating() and (self.textIndex == #self.text or #self.text == 0)) then
@@ -403,10 +382,13 @@ local function onClickKey(self)
 			self.acceptButton:Show();
 		end
 
-		if(self.acceptButton.fontString:GetText() == L.THANK_YOU and 
-		self.textIndex == #self.text and GetNumQuestChoices() > 1 and
-		not self.rewardPanel:IsShown()) then
-			UIFrameFadeIn(self.rewardPanel, 0.5, 0, 1);
+		if(self.acceptButton.fontString:GetText() == L.THANK_YOU and (self.textIndex == #self.text or #self.text == 0)) then
+			if(GetNumQuestChoices() > 1 and	not self.choicePanel:IsShown()) then
+				UIFrameFadeIn(self.choicePanel, 0.5, 0, 1);
+			end
+			if((GetNumQuestRewards() > 0 or GetNumQuestChoices() == 1) and not self.rewardPanel:IsShown()) then
+				UIFrameFadeIn(self.rewardPanel, 0.5, 0, 1);
+			end
 		end
 		
 		self.declineButton:Show();
@@ -455,51 +437,24 @@ end
 local function setUpLetterBox()
 	local screenWidth = GetScreenWidth()*UIParent:GetEffectiveScale();
 	local screenHeight = GetScreenHeight()*UIParent:GetEffectiveScale();
-	
-	letterBox = CreateFrame("FRAME", "CatchTheWind", nil);
+
+	letterBox = CatchTheWind; --CreateFrame("FRAME", "CatchTheWind", nil);
 	letterBox:SetAllPoints();
-	
-	letterBox:SetFrameStrata("FULLSCREEN_DIALOG");
-	
-	letterBox.bottomPanel = letterBox:CreateTexture();
-	letterBox.bottomPanel:SetColorTexture(0,0,0);
+
+	--BlackBars
 	letterBox.bottomPanel:SetSize(screenWidth, screenHeight/7);
-	letterBox.bottomPanel:SetPoint("BOTTOM");
-	
-	letterBox.topPanel = letterBox:CreateTexture();
-	letterBox.topPanel:SetColorTexture(0,0,0);
 	letterBox.topPanel:SetSize(screenWidth, screenHeight/7);
-	letterBox.topPanel:SetPoint("TOP");
-	
-	--QuestTitle
-	letterBox.questTitle = letterBox:CreateFontString(nil, "OVERLAY");
-	letterBox.questTitle:SetFont("Fonts\\MORPHEUS.ttf", 36, "OUTLINE");
-	letterBox.questTitle:SetTextColor(0.9, 0.9, 0.9, 1);
-	letterBox.questTitle:SetPoint("TOP", 0, -screenHeight/7-40);
-	
+
 	--QuestText
-	letterBox.questText = letterBox:CreateFontString(nil, "OVERLAY");
 	letterBox.questText:SetSize(screenWidth*0.75, screenHeight/7);
 	letterBox.questText:SetFont(blizzardFont, 16, "OUTLINE");
-	letterBox.questText:SetTextColor(0.9, 0.9, 0.9, 1);
-	letterBox.questText:SetPoint("BOTTOM", 0, 0);
-	
+
 	--fontString that shows the previous quest text, the previous line that the player read
-	letterBox.prevQuestText = letterBox:CreateFontString(nil, "OVERLAY");
 	letterBox.prevQuestText:SetSize(screenWidth*0.75, screenHeight/7);
 	letterBox.prevQuestText:SetFont(blizzardFont, 16, "OUTLINE");
-	letterBox.prevQuestText:SetTextColor(0.5, 0.5, 0.5, 1);
-	letterBox.prevQuestText:SetPoint("TOP", 0, 0);
-	
-	--setting up dressupmodel
-	CTWDressUpModel:SetParent(letterBox);
-	CTWDressUpModel:SetPoint("LEFT", 100, 0);
-	
-	CTWHelpFrame:SetParent(letterBox);
-	CTWHelpFrame:SetPoint("CENTER");
-	
-	createQuestRewardPanel();
-	
+
+	setUpQuestChoicePanel();
+	setUpQuestRewardPanel();
 	
 	letterBox.acceptButton = createButton("CTWacceptButton", letterBox, "Accept", function(self, button)
 		QuestDetailAcceptButton_OnClick();
@@ -547,6 +502,10 @@ local function setUpLetterBox()
 			Screenshot();
 		end
 
+	end);
+	
+	letterBox:SetScript("OnHide", function(self)
+		CTWQuestTitleFrame:Hide();
 	end);
 	
 	letterBox:Hide();
@@ -600,7 +559,7 @@ local localeFonts = {
 
 local function onPlayerLogin()
 	--setting the correct font (Chinese, Russian, etc)
-	blizzardFont = localeFonts[GetLocale()] or "Fonts\\FRIZQT__.TTF";
+	blizzardFont = localeFonts[GetLocale()] or STANDARD_TEXT_FONT;
 
 	setUpLetterBox();
 	loadSavedVariables();
@@ -610,6 +569,10 @@ local function onPlayerLogin()
 	end
 	if(not CatchTheWindSV[UnitName("player")]["ShowPreviousText"]) then
 		letterBox.prevQuestText:SetTextColor(0,0,0,0); --TODO: this is a quick fix to hide the text - clean this after
+	end
+	
+	if(IsAddOnLoaded("ElvUI")) then
+		MMHolder:SetParent(ElvUIParent);
 	end
 	
 	Addon:RegisterEvent("GOSSIP_SHOW");
@@ -655,8 +618,8 @@ local function onQuestDetail(questStartItemID)
 	letterBox.declineButton.fontString:SetText(L.DECLINE);
 	letterBox.declineButton:SetScript("OnMouseUp", QuestDetailDeclineButton_OnClick);
 	
-	letterBox.questTitle:SetText(GetTitleText());
-	letterBox.questTitle:Show();
+	CTWQuestTitleFrame.levelFrame.questText:SetText(GetTitleText());
+	CTWQuestTitleFrame:Show();
 	showLetterBox();
 	
 	startInteraction();
@@ -674,8 +637,8 @@ local function onQuestProgress()
 	
 	letterBox.declineButton.fontString:SetText(L.GOODBYE);
 	
-	letterBox.questTitle:SetText(GetTitleText());
-	letterBox.questTitle:Show();
+	CTWQuestTitleFrame.levelFrame.questText:SetText(GetTitleText());
+	CTWQuestTitleFrame:Show();
 	
 	showLetterBox();
 	
@@ -687,8 +650,8 @@ local function onQuestComplete()
 	cancelTimer();
 	SetView(2);
 	if(not letterBox:IsShown()) then
-		letterBox.questTitle:SetText(GetTitleText());
-		letterBox.questTitle:Show();
+		CTWQuestTitleFrame.levelFrame.questText:SetText(GetTitleText());
+		CTWQuestTitleFrame:Show();
 	
 		showLetterBox();
 	end
@@ -697,12 +660,22 @@ local function onQuestComplete()
 	
 	startInteraction();
 	
-	letterBox.acceptButton.fontString:SetText(L.THANK_YOU);
+	--if its a "greedy" quest
+	local money = GetQuestMoneyToGet();
+	if ( money and money > 0 ) then
+		letterBox.acceptButton.fontString:SetText(L.GIVE .. GetCoinTextureString(money));
+	else
+		letterBox.acceptButton.fontString:SetText(L.THANK_YOU);
+	end
 	letterBox.acceptButton:SetScript("OnMouseUp", function(self, button)
 		if(QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1 ) then
-			UIFrameFlash(letterBox.rewardPanel, 0.5, 0.5, 1.5, true, 0, 0);
+			UIFrameFlash(letterBox.choicePanel, 0.5, 0.5, 1.5, true, 0, 0);
 		else
-			QuestRewardCompleteButton_OnClick();
+			if(money and money > 0) then
+				GetQuestReward(QuestInfoFrame.itemChoice);
+			else
+				QuestRewardCompleteButton_OnClick();
+			end
 		end
 	end);
 	
@@ -711,27 +684,68 @@ local function onQuestComplete()
 	--if there is quest rewards to choose > show quest rewards
 	--In Legion, there are quests where GetNumQuestChoices() return 1, those quests are not necessary to click.
 	if(GetNumQuestChoices() > 1) then
-		local btn;
-		
 		--show icons of quests rewards
 		for i=1, GetNumQuestChoices() do
-			btn = _G["CTWrewardPanelItem"..i];
-			
+			local btn = _G["CTWChoicePanelItem"..i];
+
+
 			local name, texture, numItems, quality, isUsable = GetQuestItemInfo(btn.type, i);
+
 			SetItemButtonTexture(btn, texture);
 			_G[btn:GetName().."IconTexture"]:SetVertexColor(0.35,0.35,0.35,1);
 
-			btn:SetPoint("CENTER", (i-1)*64-(GetNumQuestChoices()/2*64)+32, -12)
+			btn:SetPoint("CENTER", (i-1)*64-(GetNumQuestChoices()/2*64)+32, -12);
+
 			btn:SetID(i);
 			btn:Show();
 		end
-		
-		--hide remain unused frames
+
+		--hide remain unused buttons
 		for i=GetNumQuestChoices()+1, 10 do
-			_G["CTWrewardPanelItem"..i]:Hide();
+			_G["CTWChoicePanelItem"..i]:Hide();
+		end
+		--letterBox.choicePanel:Show();
+	else
+		letterBox.choicePanel:Hide();
+	end
+
+	--if there are quest rewards > show quest rewards panel
+	-- * Show "real" rewards (i.e. rewards that you receive without a choice) :: /run print(GetQuestItemInfo("reward",1)) -- GetNumQuestRewards()
+	if(GetNumQuestRewards() > 0 or GetNumQuestChoices() == 1) then
+		if(GetNumQuestChoices() == 1) then
+			local btn = _G["CTWRewardPanelItem1"];
+			btn.type = "choice";
+
+			local name, texture, numItems, quality, isUsable = GetQuestItemInfo(btn.type, 1);
+
+			SetItemButtonTexture(btn, texture);
+
+			btn:SetPoint("CENTER", -20, -(GetNumQuestRewards()/2*64));
+
+			btn:SetID(1);
+			btn:Show();
+			
+			return;
 		end
 		
-		--letterBox.rewardPanel:Show();
+		for i=1, GetNumQuestRewards() do
+			local btn = _G["CTWRewardPanelItem"..i];
+			btn.type = "reward";
+
+			local name, texture, numItems, quality, isUsable = GetQuestItemInfo(btn.type, i);
+
+			SetItemButtonTexture(btn, texture);
+
+			btn:SetPoint("CENTER", -20, (i-1)*64-(GetNumQuestRewards()/2*64));
+
+			btn:SetID(i);
+			btn:Show();
+		end
+
+		--hide remain unused frames
+		for i=GetNumQuestRewards()+1, 5 do
+			_G["CTWChoicePanelItem"..i]:Hide();
+		end
 	else
 		letterBox.rewardPanel:Hide();
 	end
