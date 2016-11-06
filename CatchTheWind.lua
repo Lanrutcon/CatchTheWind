@@ -340,7 +340,7 @@ local function setUpQuestChoicePanel()
 	CTWChoicePanel.title:SetText(L.CHOOSE_YOUR_REWARD);
 	
 	for i=1, 10 do
-		CreateFrame("BUTTON", "CTWrewardPanelItem"..i, letterBox.rewardPanel, "CTWItemButtonTemplate");
+		CreateFrame("BUTTON", "CTWChoicePanelItem"..i, CTWChoicePanel, "CTWItemButtonTemplate");
 	end
 	
 end
