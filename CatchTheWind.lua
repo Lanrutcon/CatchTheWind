@@ -216,6 +216,13 @@ local function SetView(view)
 	if not (view == currentView) then
 		currentView = view;
 		blizz_SetView(view);
+		if(CatchTheWindSV[UnitName("player")]["ActionCamEnabled"]) then
+			if(view == 5) then
+				ConsoleExec("ActionCam off");
+			else
+				ConsoleExec("ActionCam full");
+			end
+		end
 	end
 end
 
@@ -585,16 +592,26 @@ local function onPlayerLogin()
 	Addon:RegisterEvent("TRAINER_CLOSED");
 	Addon:RegisterEvent("TAXIMAP_CLOSED");
 
+	Addon:RegisterEvent("QUEST_GREETING");
 	Addon:RegisterEvent("QUEST_DETAIL");
 	Addon:RegisterEvent("QUEST_PROGRESS");
 	Addon:RegisterEvent("QUEST_COMPLETE");
 	Addon:RegisterEvent("QUEST_FINISHED");
+	
+	UIParent:UnregisterEvent("EXPERIMENTAL_CVAR_CONFIRMATION_NEEDED");
 end
 
 
 local function onGossipShow()
 	cancelTimer();
 	if(GetNumGossipAvailableQuests() + GetNumGossipActiveQuests() > 0) then
+		SetView(2);
+	end
+end
+
+local function onQuestGreetings()
+	cancelTimer();
+	if(GetNumAvailableQuests() + GetNumActiveQuests() > 0) then
 		SetView(2);
 	end
 end
@@ -613,7 +630,7 @@ local function onQuestDetail(questStartItemID)
 	letterBox.text = GetQuestText();
 	
 	letterBox.acceptButton.fontString:SetText(L.ACCEPT);
-	letterBox.acceptButton:SetScript("OnMouseUp", QuestDetailAcceptButton_OnClick);
+	letterBox.acceptButton:SetScript("OnMouseUp", function() QuestDetailAcceptButton_OnClick(); hideLetterBox(); end);
 	
 	letterBox.declineButton.fontString:SetText(L.DECLINE);
 	letterBox.declineButton:SetScript("OnMouseUp", QuestDetailDeclineButton_OnClick);
@@ -725,26 +742,49 @@ local function onQuestComplete()
 			btn:SetID(1);
 			btn:Show();
 			
-			return;
+			for i=1, GetNumQuestRewards() do
+				local btn = _G["CTWRewardPanelItem"..i+1];
+				btn.type = "reward";
+
+				local name, texture, numItems, quality, isUsable = GetQuestItemInfo(btn.type, i);
+
+				SetItemButtonTexture(btn, texture);
+
+				btn:SetPoint("CENTER", -20, (i+1-1)*64-(GetNumQuestRewards()/2*64));
+
+				btn:SetID(i);
+				btn:Show();				
+			end
+		else
+			for i=1, GetNumQuestRewards() do
+				local btn = _G["CTWRewardPanelItem"..i];
+				btn.type = "reward";
+
+				local name, texture, numItems, quality, isUsable = GetQuestItemInfo(btn.type, i);
+
+				SetItemButtonTexture(btn, texture);
+
+				btn:SetPoint("CENTER", -20, (i-1)*64-(GetNumQuestRewards()/2*64));
+
+				btn:SetID(i);
+				btn:Show();
+			end
 		end
 		
-		for i=1, GetNumQuestRewards() do
-			local btn = _G["CTWRewardPanelItem"..i];
-			btn.type = "reward";
 
-			local name, texture, numItems, quality, isUsable = GetQuestItemInfo(btn.type, i);
-
-			SetItemButtonTexture(btn, texture);
-
-			btn:SetPoint("CENTER", -20, (i-1)*64-(GetNumQuestRewards()/2*64));
-
-			btn:SetID(i);
-			btn:Show();
+		--getting number of used buttons from RewardPanel
+		local i = GetNumQuestRewards();
+		if(GetNumQuestChoices() == 1) then
+			i = i + 1;
 		end
-
+		
+		--setting reward panel size
+		letterBox.rewardPanel:SetHeight(32*i + 128);
+		
 		--hide remain unused frames
-		for i=GetNumQuestRewards()+1, 5 do
-			_G["CTWChoicePanelItem"..i]:Hide();
+		while(i < 5) do
+			i = i + 1;
+			_G["CTWRewardPanelItem"..i]:Hide();
 		end
 	else
 		letterBox.rewardPanel:Hide();
@@ -756,6 +796,7 @@ end
 Addon.scripts = {
 	["PLAYER_LOGIN"] = onPlayerLogin,
 	["GOSSIP_SHOW"] = onGossipShow,
+	["QUEST_GREETING"] = onQuestGreetings,
 	["QUEST_DETAIL"] = onQuestDetail,
 	["QUEST_PROGRESS"] = onQuestProgress,
 	["QUEST_COMPLETE"] = onQuestComplete,

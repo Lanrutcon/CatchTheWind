@@ -32,11 +32,13 @@ if(locale == "frFR") then
 		ENABLE_CAMERA_ZOOM = "Activer la vue rapprochée",
 		SAVE_YOUR_VIEW = "Sauvegarder la position de votre caméra",
 		CUSTOM_VIEW = "Position de caméra personnalisée",
+		ENABLE_ACTION_CAM = "Enable ActionCam",			--TODO
 
 		--CameraTooltips
 		ENABLE_CAMERA_ZOOM_TOOLTIP = "La caméra zoome en avant lorsqu'un PNJ vous présente une quête, puis zoome arrière.",
 		SAVE_YOUR_VIEW_TOOLTIP = "Après avoir interagi avec un PNJ, reviens à votre position caméra.\n\nWarning: Ceci désactive la capacité de la caméra à suivre votre personnage.\nAprès avoir désactivé cette fonctionnalité, tapez: /ctw fixCam.",
 		CUSTOM_VIEW_TOOLTIP = "Définissez une position personnalisée de caméra pour l'interaction avec les PNJ.\nD'abord, positionnez la caméra et ensuite activez cette fonctionnalité.",
+		ENABLE_ACTION_CAM_TOOLTIP = "Uses Blizzard's 'ActionCam' feature to give a better view.\n\nWarning: Don't use it if you are already playing with it.",		--TODO
 
 
 		--QuestOptions
@@ -121,11 +123,13 @@ else
 		ENABLE_CAMERA_ZOOM = "Enable camera zoom",
 		SAVE_YOUR_VIEW = "Save your view",
 		CUSTOM_VIEW = "Custom view",
+		ENABLE_ACTION_CAM = "Enable ActionCam",
 
 		--CameraTooltips
-		ENABLE_CAMERA_ZOOM_TOOLTIP = "Camera zooms in/out when a NPC has quests to talk about",
+		ENABLE_CAMERA_ZOOM_TOOLTIP = "Camera zooms in/out when a NPC has quests to talk about.",
 		SAVE_YOUR_VIEW_TOOLTIP = "After interacting with a NPC, it zooms out to your view.\n\nWarning: This disables camera's ability to follow.\nAfter disable this, type: /ctw fixCam.",
 		CUSTOM_VIEW_TOOLTIP = "Set a custom view for the interaction.\nFirst, position the camera and then enable this feature.",
+		ENABLE_ACTION_CAM_TOOLTIP = "Uses Blizzard's 'ActionCam' feature to give a better view.\n\nWarning: Don't use it if you are already playing with it.",
 
 
 		--QuestOptions

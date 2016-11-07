@@ -47,9 +47,10 @@ function CatchTheWindConfig_OnShow()
 	else
 		menu.toggleCamera.text:SetTextColor(1, 0.4, 0.4);
 		
-		--if the camera is not enable, disable "Save View" and "Custom View" button
+		--if the camera is not enable, disable "Save View", "Custom View" and "Enable ActionCam" button
 		menu.saveView:Disable();
 		menu.customView:Disable();
+		menu.toggleActionCam:Disable();
 		return;
 	end
 	
@@ -66,6 +67,13 @@ function CatchTheWindConfig_OnShow()
 	else
 		menu.customView.text:SetTextColor(1, 0.4, 0.4);
 	end
+	
+	menu.toggleActionCam:SetChecked(CatchTheWindSV[UnitName("player")]["ActionCamEnabled"]);
+	if(CatchTheWindSV[UnitName("player")]["ActionCamEnabled"]) then
+		menu.toggleActionCam.text:SetTextColor(0.4, 1, 0.4);
+	else
+		menu.toggleActionCam.text:SetTextColor(1, 0.4, 0.4);
+	end
 end
 
 
@@ -75,7 +83,8 @@ function CatchTheWindConfigCameraMenuToggleCamera_OnLoad(self)
 
 	self.func = function(newValue)
 		CatchTheWindSV[UnitName("player")]["CameraEnabled"] = newValue;
-		if(newValue == nil) then
+		print(newValue)
+		if(newValue == false) then
 			self:GetParent().saveView:Disable();
 			CatchTheWindSV[UnitName("player")]["SaveView"] = nil;
 			
@@ -83,9 +92,13 @@ function CatchTheWindConfigCameraMenuToggleCamera_OnLoad(self)
 			CatchTheWindSV[UnitName("player")]["CustomView"] = nil;
 			
 			self:GetParent().customView.func();
+			
+			self:GetParent().toggleActionCam:Disable();
+			CatchTheWindSV[UnitName("player")]["ActionCamEnabled"] = nil;
 		else
 			self:GetParent().saveView:Enable();
 			self:GetParent().customView:Enable();
+			self:GetParent().toggleActionCam:Enable();
 		end
 	end
 end
@@ -113,6 +126,15 @@ function CatchTheWindConfigCameraMenuCustomView_OnLoad(self)
 			SaveView(2);
 		end
 		CatchTheWindSV[UnitName("player")]["CustomView"] = newValue;
+	end
+end
+
+function CatchTheWindConfigCameraMenuToggleActionCam_OnLoad(self)
+	self.text:SetText(L.ENABLE_ACTION_CAM);
+	self.tooltipText = L.ENABLE_ACTION_CAM_TOOLTIP;
+
+	self.func = function(newValue)
+		CatchTheWindSV[UnitName("player")]["ActionCamEnabled"] = newValue;
 	end
 end
 
@@ -156,7 +178,10 @@ local creditsText =
 
 |cffff9966French translation|r made by |cff6699ffRaffiq|r
 
-|cff99ff66Special Thanks|r to |cff6699ffJV|r]];
+
+|cff99ff66Special Thanks|r to:
+|cffffff44JV|r
+|cffffff44GR|r]];
 
 
 function CatchTheWindConfigCreditsMenu_OnLoad(self)

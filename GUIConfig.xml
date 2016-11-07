@@ -296,6 +296,28 @@
 							</OnDisable>
 						</Scripts>
 					</CheckButton>
+				
+					<CheckButton name="$parentToggleActionCam" parentKey="toggleActionCam" inherits="CatchTheWindConfigCheckButtonTemplate">
+						<Anchors>
+							<Anchor point="TOP" x="0" y="-96"/>
+						</Anchors>
+					
+						<Scripts>
+							<OnLoad function="CatchTheWindConfigCameraMenuToggleActionCam_OnLoad"/>
+							
+							<OnEnable>
+								if(CatchTheWindSV[UnitName("player")]["ActionCamEnabled"]) then
+									self.text:SetTextColor(0.4, 1, 0.4);
+								else
+									self.text:SetTextColor(1, 0.4, 0.4);
+								end
+							</OnEnable>
+							
+							<OnDisable>
+								self.text:SetTextColor(0.2, 0.2, 0.2);
+							</OnDisable>
+						</Scripts>
+					</CheckButton>
 				</Frames>
 		
 			</Frame>
@@ -400,7 +422,7 @@
 				<Layers>
 					<Layer level="ARTWORK">
 						<FontString name="$parentCreditsText" parentKey="creditsText" inherits="CatchTheWindConfigCreditsFont">
-							<Size x="350" y="128"/>
+							<Size x="350" y="190"/>
 							<Anchors>
 								<Anchor point="TOP"/>
 							</Anchors>
