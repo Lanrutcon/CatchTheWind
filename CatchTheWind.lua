@@ -597,6 +597,7 @@ local function onPlayerLogin()
 	Addon:RegisterEvent("QUEST_PROGRESS");
 	Addon:RegisterEvent("QUEST_COMPLETE");
 	Addon:RegisterEvent("QUEST_FINISHED");
+	Addon:RegisterEvent("QUEST_TURNED_IN");
 	
 	UIParent:UnregisterEvent("EXPERIMENTAL_CVAR_CONFIRMATION_NEEDED");
 end
@@ -792,6 +793,18 @@ local function onQuestComplete()
 end
 
 
+local function onQuestTurnedIn()
+	if(timer:GetScript("OnUpdate")) then
+		return;
+	end
+	letterBox.rewardPanel:Hide();
+	createTimer(0.5, function()
+		hideLetterBox();
+		SetView(5);
+	end);
+end
+
+
 --Table with the scripts
 Addon.scripts = {
 	["PLAYER_LOGIN"] = onPlayerLogin,
@@ -800,6 +813,7 @@ Addon.scripts = {
 	["QUEST_DETAIL"] = onQuestDetail,
 	["QUEST_PROGRESS"] = onQuestProgress,
 	["QUEST_COMPLETE"] = onQuestComplete,
+	["QUEST_TURNED_IN"] = onQuestTurnedIn,
 };
 
 
