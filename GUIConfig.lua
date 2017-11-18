@@ -5,7 +5,7 @@ function CatchTheWindConfigMenuButton_OnClick(self, button)
 	for num, button in pairs(self:GetParent().menuButtonsTable) do
 		button:Enable();
 	end
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(856);
 	self:Disable();
 	
 	self.func();
@@ -18,7 +18,7 @@ function CatchTheWindConfigCheckButton_OnClick(self, button)
 	else
 		self.text:SetTextColor(1, 0.4, 0.4);
 	end
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(856);
 	self.func(self:GetChecked());
 end
 
