@@ -97,6 +97,51 @@ elseif(locale == "ptPT" or locale == "ptBR") then
 		ENABLE_QUEST_SOUND_TOOLTIP = "Enquanto o texto está a ser animado, um som de 'escrita' está ser reproduzido.",
 	};
 
+------------------------------------------
+-- ruRU (Pусский)
+------------------------------------------
+elseif(locale == "ruRU") then
+	L = { 
+		--QuestFrame
+		ACCEPT = "Принять",
+		DECLINE = "Отклонить",
+		CHOOSE_YOUR_REWARD = "Выберите награду",
+		CONTINUE = "Продолжить",
+		GOODBYE = "До свидания",
+		THANK_YOU = "Хорошо",
+		GIVE = "Отдать",
+		
+		--TODO: RUSSIAN Translation incomplete
+		--OptionsMenu
+		CAMERA = "Camera",
+		QUEST = "Quest",
+		CREDITS = "Credits",
+
+
+		--CameraOptions
+		ENABLE_CAMERA_ZOOM = "Enable camera zoom",
+		SAVE_YOUR_VIEW = "Save your view",
+		CUSTOM_VIEW = "Custom view",
+		ENABLE_ACTION_CAM = "Enable ActionCam",
+
+		--CameraTooltips
+		ENABLE_CAMERA_ZOOM_TOOLTIP = "Camera zooms in/out when a NPC has quests to talk about.",
+		SAVE_YOUR_VIEW_TOOLTIP = "After interacting with a NPC, it zooms out to your view.\n\nWarning: This disables camera's ability to follow.\nAfter disable this, type: /ctw fixCam.",
+		CUSTOM_VIEW_TOOLTIP = "Set a custom view for the interaction.\nFirst, position the camera and then enable this feature.",
+		ENABLE_ACTION_CAM_TOOLTIP = "Uses Blizzard's 'ActionCam' feature to give a better view.\n\nWarning: Don't use it if you are already playing with it.",
+
+
+		--QuestOptions
+		SHOW_PREVIOUS_TEXT = "Show previous text",
+		CHANGE_TEXT_SPEED = "Change text speed",
+		ENABLE_QUEST_SOUND = "Enable quest sound",
+
+		--QuestTooltips
+		SHOW_PREVIOUS_TEXT_TOOLTIP = "After going to the next paragraph, the previous one will be shown at the top.",
+		CHANGE_TEXT_SPEED_TOOLTIP = "Changes quest text speed when interacting with a NPC about a quest.",
+		CHANGE_TEXT_SPEED_TOOLTIP2 = "Current factor of text speed: %g",
+		ENABLE_QUEST_SOUND_TOOLTIP = "When animating the quest text, a writing sound is being played.",
+	};
 
 ------------------------------------------
 -- Default Language (English)

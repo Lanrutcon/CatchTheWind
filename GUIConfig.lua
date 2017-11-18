@@ -177,6 +177,7 @@ local creditsText =
 |cffff9966Quest Sound|r suggested by |cff6699ffRaffiq|r
 
 |cffff9966French translation|r made by |cff6699ffRaffiq|r
+|cffff9966Russian translation|r made by |cff6699ffAdan714|r
 
 
 |cff99ff66Special Thanks|r to:
