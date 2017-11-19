@@ -161,7 +161,7 @@ local function animateText(fontString)
 	fontString:SetAlphaGradient(0,20);
 	isAnimating = true;
 	if(questSoundEnabled) then
-		PlaySoundKitID(3093);
+		PlaySound(3093);
 	end
 	animationFrame:SetScript("OnUpdate", function(self, elapsed)
 		total = total + elapsed;
@@ -179,7 +179,7 @@ local function animateText(fontString)
 		end
 		if(questSoundEnabled and totalSfx > 1.4) then
 			totalSfx = 0;
-			PlaySoundKitID(3093);
+			PlaySound(3093);
 		end
 	end);
 end
