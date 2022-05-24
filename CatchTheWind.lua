@@ -695,7 +695,6 @@ local function onQuestComplete()
 			_G["CTWChoicePanelItem"..i]:Hide();
 		end
 	else
-		print("rewardPanel hide")
 		letterBox.rewardPanel:Hide();
 	end
 end
