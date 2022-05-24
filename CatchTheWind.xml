@@ -88,9 +88,9 @@
 				GameTooltip:SetQuestItem(self.type, self:GetID());
 
 				if(IsShiftKeyDown()) then
-					for i=1,3 do
-						_G["ShoppingTooltip"..i]:SetParent(CatchTheWind);
-						_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
+					for i=1,2 do
+						_G["ItemRefShoppingTooltip"..i]:SetParent(CatchTheWind);
+						_G["ItemRefShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
 					end
 					CTW_GameTooltip_ShowCompareItem(GameTooltip);
 				end
@@ -100,9 +100,9 @@
 				GameTooltip:SetParent(UIParent);
 				GameTooltip:SetFrameStrata("TOOLTIP");
 				GameTooltip:Hide();
-				for i=1,3 do
-					_G["ShoppingTooltip"..i]:SetParent(UIParent);
-					_G["ShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
+				for i=1,2 do
+					_G["ItemRefShoppingTooltip"..i]:SetParent(UIParent);
+					_G["ItemRefShoppingTooltip"..i]:SetFrameStrata("TOOLTIP");
 				end
 				ResetCursor();
 			</OnLeave>
