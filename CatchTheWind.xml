@@ -48,7 +48,7 @@
 	</Frame>
 
 	<!--QuestItem Button Template -->
-	<Button name="CTWItemButtonTemplate" hidden="true" inherits="QuestInfoRewardItemTemplate" virtual="true">
+	<Button name="CTWItemButtonTemplate" hidden="true" inherits="LargeQuestRewardItemButtonTemplate" virtual="true">
 
 		<Size x="48" y="48"/>
 
