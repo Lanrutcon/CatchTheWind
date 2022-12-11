@@ -1,8 +1,8 @@
-## Interface: 70300
+## Interface: 100002
 ## Title: CatchTheWind
 ## Author: Lanrutcon
 ## Notes: Cinematic Quest Interactions
-## Version: 1.7.3
+## Version: 1.7.4
 ## SavedVariables: CatchTheWindSV
 
 Utils.lua
