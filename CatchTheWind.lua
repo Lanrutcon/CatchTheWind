@@ -250,10 +250,11 @@ local function hideLetterBox()
 	local alpha = UIParent:GetAlpha();
 	MinimapCluster:Show();
 	frameFader:SetScript("OnUpdate", function(self, elapsed)
+		alpha = alpha + 0.05;
 		if(alpha < 1) then
-			alpha = alpha + 0.05;
 			UIParent:SetAlpha(alpha);
 		else
+			UIParent:SetAlpha(1);
 			frameFader:SetScript("OnUpdate", nil);
 		end
 	
@@ -264,11 +265,12 @@ local function hideLetterBox()
 	CTWHelpFrame:Hide();
 	local alpha = letterBox:GetAlpha();
 	letterBox:SetScript("OnUpdate", function(self, elapsed)
-		letterBox:SetAlpha(alpha);
 		alpha = alpha - 0.05;
-		if(alpha < 0) then
-			letterBox:SetScript("OnUpdate", nil);
+		if(alpha > 0) then
+			letterBox:SetAlpha(alpha);
+		else
 			letterBox:Hide();
+			letterBox:SetScript("OnUpdate", nil);
 		end
 	end);
 
