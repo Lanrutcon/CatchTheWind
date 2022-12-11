@@ -47,27 +47,27 @@
 		</Frames>
 	</Frame>
 	<!--QuestItem Button Template -->
-	<Button name="CTWItemButtonTemplate" hidden="true" inherits="LargeItemButtonTemplate, QuestInfoRewardItemCodeTemplate" virtual="true">
+	<Button name="CTWItemButtonTemplate" hidden="true" inherits="LargeItemButtonTemplate, QuestInfoRewardItemCodeTemplate, BackdropTemplate" virtual="true">
 	
 		<Size x="48" y="48"/>
-		
-		<Backdrop edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
-			<BackgroundInsets>
-				<AbsInset left="6" right="6" top="6" bottom="6"/>
-			</BackgroundInsets>
-			<TileSize>
-				<AbsValue val="22"/>
-			</TileSize>
-			<EdgeSize>
-				<AbsValue val="22"/>
-			</EdgeSize>
-		</Backdrop>
-		
+
 		<Scripts>
 			<OnLoad>
 				self.type = "choice";
 				self.objectType = "item";
-			
+
+				self:SetBackdrop({
+					edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+					edgeSize = 22,
+					tile = true,
+					tileSize = 22,
+					insets = {
+						left = 6,
+						right = 6,
+						bottom = 6,
+					},
+				})
+
 				_G[self:GetName().."NameFrame"]:Hide();
 				_G[self:GetName().."Name"]:Hide();
 				
@@ -127,25 +127,13 @@
 	
 	
 	<!-- Frame that contains information about the addOn -->
-	<Frame name="CTWHelpFrame" parent="CatchTheWind" hidden="true">
+	<Frame name="CTWHelpFrame" parent="CatchTheWind" inherits="BackdropTemplate" hidden="true">
 		<Size x="320" y="150"/>
 		
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
-		
-		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
-			<BackgroundInsets>
-				<AbsInset left="11" right="12" top="12" bottom="11"/>
-			</BackgroundInsets>
-			<TileSize>
-				<AbsValue val="32"/>
-			</TileSize>
-			<EdgeSize>
-				<AbsValue val="32"/>
-			</EdgeSize>
-		</Backdrop>
-		
+
 		<Layers>
 			<Layer level="ARTWORK">
 				<FontString name="$parentText" parentKey="text" justifyH="LEFT" inherits="GameFontNormal">
@@ -160,6 +148,20 @@
 		
 		<Scripts>
 			<OnLoad>
+				self:SetBackdrop({
+					bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+					edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+					tile = true, 
+					tileSize = 32,
+					edgeSize = 32,
+					insets = {
+						left = 11,
+						right = 12,
+						top = 12,
+						bottom = 11,
+					},
+				})
+
 				self.text:SetText([[Help Frame:
 
 [A] and [D]- Moves between options
@@ -202,14 +204,10 @@
 					<Animations>
 						<AnimationGroup parentKey="grow">
 							<Scale scaleX="1.0" scaleY="0.001" duration="0.0" startDelay="0.5" order="1">
-								 <Origin point="BOTTOM">
-									<Offset x="0" y="0"/>
-								 </Origin>
+								 <Origin point="BOTTOM"/>
 							</Scale>
 							<Scale scaleX="1.0" scaleY="1000.0" duration="0.15" startDelay="0.25" order="2">
-								 <Origin point="BOTTOM">
-									<Offset x="0" y="0"/>
-								 </Origin>
+								 <Origin point="BOTTOM"/>
 							</Scale>
 						</AnimationGroup>
 					</Animations>
@@ -391,7 +389,7 @@
 
 		<Scripts>
 			<OnLoad>
-				self.background:SetGradientAlpha("HORIZONTAL", 0, 0, 0, 0, 0, 0, 0, 0.9);
+				self.background:SetGradient("HORIZONTAL", CreateColor(0, 0, 0, 0), CreateColor(0, 0, 0, 0.9));
 			</OnLoad>
 		</Scripts>
 	</Frame>

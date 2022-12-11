@@ -341,8 +341,12 @@ end
 --
 -------------------------------------
 local function setUpQuestChoicePanel()
-	CTWChoicePanel.textureLeft:SetGradientAlpha("HORIZONTAL", 0, 0, 0, 0, 0, 0, 0, 0.9);
-	CTWChoicePanel.textureRight:SetGradientAlpha("HORIZONTAL", 0, 0, 0, 0.9, 0, 0, 0, 0);
+	local palette = {
+		[0] = CreateColor(0,0,0,0),
+		[0.9] = CreateColor(0,0,0,0.9),
+	}
+	CTWChoicePanel.textureLeft:SetGradient("HORIZONTAL", palette[0], palette[0.9]);
+	CTWChoicePanel.textureRight:SetGradient("HORIZONTAL", palette[0.9], palette[0]);
 	CTWChoicePanel.title:SetFont(blizzardFont, 18, "OUTLINE");
 	CTWChoicePanel.title:SetText(L.CHOOSE_YOUR_REWARD);
 	
@@ -605,7 +609,7 @@ end
 
 local function onGossipShow()
 	cancelTimer();
-	if(GetNumGossipAvailableQuests() + GetNumGossipActiveQuests() > 0) then
+	if(C_GossipInfo.GetNumAvailableQuests() + C_GossipInfo.GetNumActiveQuests() > 0) then
 		SetView(2);
 	end
 end

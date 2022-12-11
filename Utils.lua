@@ -47,10 +47,10 @@ function frameFade(frame, duration, startAlpha, endAlpha, hideEnd)
 			--setting new alpha
 			local timeElapsed = currentTime - startTime;
 			newAlpha = endAlpha*(timeElapsed/duration) + startAlpha*((endTime - currentTime)/duration);
-			
-			frame:SetAlpha(newAlpha);
-			
-			if(currentTime > endTime) then
+						
+			if(currentTime < endTime) then				
+				frame:SetAlpha(newAlpha);
+			else
 				frame:SetAlpha(endAlpha);
 				if(hideEnd and not frame:IsProtected()) then
 					frame:Hide();
